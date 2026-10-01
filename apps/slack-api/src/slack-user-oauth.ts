@@ -94,8 +94,12 @@ export async function handleSlackUserOAuthCallback(req: Request, res: Response):
     authed_user?: { id?: string; access_token?: string };
   };
   if (!tokenRes.ok || !tokenJson.ok || !tokenJson.authed_user?.access_token) {
-    const msg = tokenJson.error ?? "No user access token returned";
-    res.status(400).send(`Slack token exchange failed: ${msg}`);
+    const errCode = tokenJson.error ?? "No user access token returned";
+    const hint =
+      errCode === "bad_client_secret"
+        ? " Set Render SLACK_CLIENT_SECRET to the OAuth Client Secret on api.slack.com (Basic Information), not the Signing Secret."
+        : "";
+    res.status(400).send(`Slack token exchange failed: ${errCode}.${hint}`);
     return;
   }
 

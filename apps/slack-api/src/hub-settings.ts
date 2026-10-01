@@ -54,17 +54,27 @@ export async function seedHubSettingsFromEnv(): Promise<void> {
     if (existing?.trim() !== fromEnv) await writeEncrypted(KEY_OPENROUTER, fromEnv);
   }
   const slackSecret = process.env.SLACK_CLIENT_SECRET?.trim();
-  if (slackSecret) {
+  const signingSecret = process.env.SLACK_SIGNING_SECRET?.trim();
+  if (slackSecret && slackSecret !== signingSecret) {
     const existingSlack = await readEncrypted(KEY_SLACK_CLIENT_SECRET);
     if (existingSlack?.trim() !== slackSecret) await writeEncrypted(KEY_SLACK_CLIENT_SECRET, slackSecret);
   }
 }
 
 export async function getSlackClientSecret(): Promise<string | null> {
-  const fromDb = await readEncrypted(KEY_SLACK_CLIENT_SECRET);
-  if (fromDb?.trim()) return fromDb.trim();
+  const signing = process.env.SLACK_SIGNING_SECRET?.trim();
   const fromEnv = process.env.SLACK_CLIENT_SECRET?.trim();
-  return fromEnv ?? null;
+  if (fromEnv) {
+    if (signing && fromEnv === signing) return null;
+    return fromEnv;
+  }
+  const fromDb = await readEncrypted(KEY_SLACK_CLIENT_SECRET);
+  const db = fromDb?.trim();
+  if (db) {
+    if (signing && db === signing) return null;
+    return db;
+  }
+  return null;
 }
 
 export async function saveHubSlackOAuthSettings(slackClientSecret: string): Promise<void> {

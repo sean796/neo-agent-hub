@@ -20,6 +20,7 @@ import {
   handleSlackUserOAuthStart,
   slackUserOAuthConfiguredAsync,
 } from "./slack-user-oauth.js";
+import { slackClientSecretMisconfigured } from "./slack-oauth-config.js";
 import { saveHubSlackOAuthSettings } from "./hub-settings.js";
 import { assertHubAdmin, hubAdminTokenConfigured } from "./hub-admin.js";
 import {
@@ -134,6 +135,7 @@ api.get("/health", async (_req, res) => {
     meetingNotesDrive: meetingNotesDriveConfigured(),
     pulseBridge: pulseBridgeConfigured(),
     slackUserOAuth: await slackUserOAuthConfiguredAsync(),
+    slackUserOAuthClientSecretMisconfigured: slackClientSecretMisconfigured(),
   });
 });
 

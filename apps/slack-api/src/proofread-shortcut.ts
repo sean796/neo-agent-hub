@@ -6,6 +6,7 @@ import {
 } from "./connections.js";
 import { openRouterConfiguredAsync } from "./hub-settings.js";
 import { PROOFREAD_MESSAGE_CALLBACK_ID, proofreadSlackMessage } from "./proofread-message.js";
+import { slackClientSecretMisconfigured } from "./slack-oauth-config.js";
 import { buildSlackUserConnectUrl, slackUserOAuthConfiguredAsync } from "./slack-user-oauth.js";
 import { updateMessageAsUser } from "./slack-message-update.js";
 
@@ -75,9 +76,12 @@ export function registerProofreadShortcut(app: App): void {
     if (!teamId) return;
 
     if (!(await slackUserOAuthConfiguredAsync())) {
+      const misSecret = slackClientSecretMisconfigured();
       await respond({
         response_type: "ephemeral",
-        text: "Proofread rewrite is not configured. Set SLACK_CLIENT_ID, SLACK_CLIENT_SECRET, and SLACK_USER_OAUTH_REDIRECT_URI on Render.",
+        text: misSecret
+          ? "Slack OAuth client secret on Render is wrong: use Client Secret from api.slack.com Basic Information, not Signing Secret."
+          : "Proofread rewrite is not configured. Set SLACK_CLIENT_ID, SLACK_CLIENT_SECRET, and SLACK_USER_OAUTH_REDIRECT_URI on Render.",
       });
       return;
     }
