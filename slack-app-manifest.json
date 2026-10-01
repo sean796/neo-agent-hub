@@ -66,11 +66,11 @@
         "commands",
         "chat:write",
         "users:read"
+      ],
+      "user": [
+        "chat:write"
       ]
-    },
-    "user_scopes": [
-      "chat:write"
-    ]
+    }
   },
   "settings": {
     "event_subscriptions": {
