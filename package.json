@@ -1,0 +1,19 @@
+{
+  "name": "neo-agent-hub",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @neo-agent-hub/core && npm run build -w @neo-agent-hub/slack-api && npm run build -w @neo-agent-hub/hub-web",
+    "build:api": "npm run build -w @neo-agent-hub/slack-api",
+    "build:web": "npm run build -w @neo-agent-hub/hub-web",
+    "start:api": "npm run start -w @neo-agent-hub/slack-api",
+    "dev:api": "npm run dev -w @neo-agent-hub/slack-api",
+    "dev:web": "npm run dev -w @neo-agent-hub/hub-web"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

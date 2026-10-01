@@ -1,0 +1,7 @@
+{
+  "name": "@neo-agent-hub/agent-meeting-notes",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Meeting notes to checklist agent (implementation pending)"
+}

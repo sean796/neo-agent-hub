@@ -1,0 +1,124 @@
+.hub {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.band {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 1rem;
+  min-height: 2rem;
+  font-size: 1rem;
+}
+
+.band-title {
+  background: rgb(24 24 27 / 0.5);
+}
+
+.band-title h1 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.band-toolbar {
+  background: #000;
+}
+
+.band-progress {
+  background: rgb(24 24 27 / 0.5);
+  color: #a1a1aa;
+}
+
+.field {
+  height: 2rem;
+  min-width: 16rem;
+  padding: 0 0.75rem;
+  border: 0;
+  border-radius: 0;
+  background: #18181b;
+  color: #fafafa;
+  font-size: 1rem;
+}
+
+.field::placeholder {
+  color: #a1a1aa;
+}
+
+.count {
+  margin-left: auto;
+  color: #a1a1aa;
+}
+
+.content {
+  flex: 1;
+  padding: 1rem;
+}
+
+.agent-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.agent-row {
+  padding: 1rem;
+  background: #18181b;
+  min-height: 5.5rem;
+}
+
+.agent-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pill {
+  padding: 0.125rem 0.5rem;
+  background: #27272a;
+  font-size: 1rem;
+}
+
+.pill-active {
+  color: #4ade80;
+}
+
+.pill-beta {
+  color: #facc15;
+}
+
+.pill-disabled {
+  color: #a1a1aa;
+}
+
+.muted {
+  margin: 0.5rem 0 0;
+  color: #a1a1aa;
+}
+
+.mono {
+  margin: 0.25rem 0 0;
+  font-family: ui-monospace, monospace;
+  color: #71717a;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.skeleton .skeleton-line {
+  display: block;
+  height: 1rem;
+  background: #27272a;
+  margin-bottom: 0.5rem;
+}
+
+.skeleton-line.short {
+  width: 40%;
+}
