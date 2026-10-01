@@ -9,6 +9,12 @@ import {
   handleGoogleOAuthStart,
 } from "./google-oauth.js";
 import { runMeetingNotesCommand } from "./meeting-notes-command.js";
+import { assertHubAdmin, hubAdminTokenConfigured } from "./hub-admin.js";
+import {
+  getHubSettingsPublic,
+  openRouterConfiguredAsync,
+  saveHubOpenRouterSettings,
+} from "./hub-settings.js";
 
 const port = Number(process.env.PORT) || 10000;
 
@@ -47,7 +53,7 @@ if (receiver) {
       return;
     }
     if (sub === "meeting-notes") {
-      await runMeetingNotesCommand(command.user_id, command.team_id, respond);
+      void runMeetingNotesCommand(command.user_id, command.team_id, respond);
       return;
     }
     await respond({
@@ -58,7 +64,7 @@ if (receiver) {
 
   app.command("/meeting-notes", async ({ command, ack, respond }) => {
     await ack();
-    await runMeetingNotesCommand(command.user_id, command.team_id, respond);
+    void runMeetingNotesCommand(command.user_id, command.team_id, respond);
   });
 }
 
@@ -77,13 +83,50 @@ api.get("/health", async (_req, res) => {
   } catch (e) {
     db = { ok: false, error: e instanceof Error ? e.message : "db error" };
   }
+  let openRouter = false;
+  try {
+    openRouter = await openRouterConfiguredAsync();
+  } catch {
+    openRouter = false;
+  }
   res.status(200).json({
     ok: true,
     service: "neo-agent-hub-api",
     db,
     slack: Boolean(receiver),
     googleOAuth: googleOAuthConfigured(),
+    openRouter,
+    hubSettingsAdmin: hubAdminTokenConfigured(),
   });
+});
+
+api.get("/api/hub/settings", async (_req, res) => {
+  try {
+    const settings = await getHubSettingsPublic();
+    res.json(settings);
+  } catch (e) {
+    res.status(500).json({
+      error: e instanceof Error ? e.message : "Failed to load settings",
+    });
+  }
+});
+
+api.put("/api/hub/settings/openrouter", async (req, res) => {
+  try {
+    assertHubAdmin(req);
+    const body = req.body as { openRouterApiKey?: string; openRouterModel?: string };
+    const key = String(body.openRouterApiKey ?? "").trim();
+    if (!key) {
+      res.status(400).json({ error: "openRouterApiKey is required" });
+      return;
+    }
+    await saveHubOpenRouterSettings(key, body.openRouterModel);
+    res.json(await getHubSettingsPublic());
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Save failed";
+    const status = msg === "Unauthorized" ? 401 : 400;
+    res.status(status).json({ error: msg });
+  }
 });
 
 api.get("/api/agents", async (_req, res) => {

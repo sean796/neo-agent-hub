@@ -31,4 +31,10 @@ CREATE TABLE IF NOT EXISTS agent_runs (
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS agent_runs_dedupe_idx ON agent_runs (dedupe_key) WHERE dedupe_key IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS hub_settings (
+  key TEXT PRIMARY KEY,
+  value_enc TEXT NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 `.trim();

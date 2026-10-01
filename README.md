@@ -61,8 +61,11 @@ Create one Slack app **Neo Agent Hub** and set:
 - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_OAUTH_REDIRECT_URI` (see Google OAuth below)
 - `TOKEN_ENCRYPTION_KEY` — 32-byte secret for token encryption at rest
 - `API_PUBLIC_URL` — public API origin (no trailing slash)
-- `OPENROUTER_API_KEY` — required for `/meeting-notes` checklist (Gmail fetch uses Google OAuth above)
-- `OPENROUTER_MODEL` — optional OpenRouter model id (default `google/gemini-2.5-flash`)
+- `OPENROUTER_API_KEY` — optional bootstrap; prefer **Hub → Settings** (stored encrypted in Postgres)
+- `HUB_ADMIN_TOKEN` — required to save settings from the hub UI (header `X-Hub-Admin-Token`)
+- `OPENROUTER_MODEL` — optional; default `google/gemini-2.5-flash` (editable in Settings)
+
+**Hub settings UI:** https://neo-agent-hub-web.onrender.com → **Settings** → admin token + OpenRouter key. Keys are encrypted at rest; the API never returns full secrets (suffix only).
 
 ## Static site
 

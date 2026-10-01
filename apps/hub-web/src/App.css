@@ -23,6 +23,63 @@
   font-weight: 700;
 }
 
+.title-nav {
+  margin-left: auto;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.tab {
+  border: 0;
+  cursor: pointer;
+  color: #fafafa;
+}
+
+.tab-active {
+  background: #3f3f46;
+}
+
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 48rem;
+}
+
+.settings-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.field-wide {
+  width: 100%;
+  max-width: 48rem;
+}
+
+.settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.btn {
+  height: 2rem;
+  padding: 0 1rem;
+  border: 0;
+  border-radius: 0;
+  background: #3f3f46;
+  color: #fafafa;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .band-toolbar {
   background: #000;
 }

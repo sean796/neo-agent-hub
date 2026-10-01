@@ -1,4 +1,5 @@
 import type { GeminiMeetingNote } from "./gmail-api.js";
+import { getOpenRouterApiKey, getOpenRouterModel } from "./hub-settings.js";
 
 export interface MeetingChecklistResult {
   meetingTitle: string;
@@ -19,17 +20,13 @@ const CHECKLIST_SCHEMA = {
   additionalProperties: false,
 } as const;
 
-export function openRouterConfigured(): boolean {
-  return Boolean(process.env.OPENROUTER_API_KEY?.trim());
-}
-
 export async function buildChecklistFromNote(note: GeminiMeetingNote): Promise<MeetingChecklistResult> {
-  const apiKey = process.env.OPENROUTER_API_KEY?.trim();
+  const apiKey = await getOpenRouterApiKey();
   if (!apiKey) {
-    throw new Error("OPENROUTER_API_KEY is not set on the server.");
+    throw new Error("OpenRouter API key is not configured. Add it in Neo Agent Hub Settings.");
   }
 
-  const model = process.env.OPENROUTER_MODEL?.trim() || "google/gemini-2.5-flash";
+  const model = await getOpenRouterModel();
 
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
@@ -100,7 +97,9 @@ export function formatChecklistSlackMrkdwn(
   note: GeminiMeetingNote,
   checklist: MeetingChecklistResult,
 ): string {
-  const when = note.receivedAt ? new Date(note.receivedAt).toLocaleString("en-CA", { timeZone: "America/Edmonton" }) : "";
+  const when = note.receivedAt
+    ? new Date(note.receivedAt).toLocaleString("en-CA", { timeZone: "America/Edmonton" })
+    : "";
   const lines = checklist.checklistItems.map((item) => `• ${item}`);
   return [
     `*${checklist.meetingTitle}*`,

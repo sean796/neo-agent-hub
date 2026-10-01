@@ -1,5 +1,6 @@
 import pg from "pg";
 import { AGENT_REGISTRY, SCHEMA_SQL } from "@neo-agent-hub/core";
+import { seedHubSettingsFromEnv } from "./hub-settings.js";
 
 let pool: pg.Pool | null = null;
 
@@ -35,6 +36,7 @@ export async function initDb(): Promise<{ ok: boolean; error?: string }> {
       [agent.id, agent.name, agent.status, agent.description],
     );
   }
+  await seedHubSettingsFromEnv();
   return { ok: true };
 }
 
