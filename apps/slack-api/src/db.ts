@@ -39,6 +39,8 @@ export async function initDb(): Promise<{ ok: boolean; error?: string }> {
       [agent.id, agent.name, agent.status, agent.description],
     );
   }
+  const registryIds = AGENT_REGISTRY.map((a) => a.id);
+  await p.query(`DELETE FROM agents WHERE NOT (id = ANY($1::text[]))`, [registryIds]);
   await seedHubSettingsFromEnv();
   return { ok: true };
 }

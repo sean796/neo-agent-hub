@@ -5,7 +5,7 @@
   },
   "display_information": {
     "name": "Neo Agent Hub",
-    "description": "Neo Digital agents in Slack: meeting notes, write, SEO tools.",
+    "description": "Neo Digital agents in Slack: meeting notes and write.",
     "background_color": "#09090b"
   },
   "features": {
@@ -56,20 +56,6 @@
         "command": "/meeting-notes",
         "description": "Meeting notes to task list and checklist",
         "usage_hint": "latest",
-        "should_escape": false,
-        "url": "https://neo-agent-hub-api.onrender.com/slack/commands"
-      },
-      {
-        "command": "/seo-pulse",
-        "description": "GSC digest and one recommended action",
-        "usage_hint": "site slug",
-        "should_escape": false,
-        "url": "https://neo-agent-hub-api.onrender.com/slack/commands"
-      },
-      {
-        "command": "/intent-check",
-        "description": "Check draft vs search intent beta",
-        "usage_hint": "query or URL",
         "should_escape": false,
         "url": "https://neo-agent-hub-api.onrender.com/slack/commands"
       },

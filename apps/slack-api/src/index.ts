@@ -14,9 +14,6 @@ import { registerRewriteSlashCommands } from "./rewrite-commands.js";
 import { registerRewriteModals } from "./rewrite-modal.js";
 import { registerRewriteShortcuts } from "./rewrite-shortcuts.js";
 import { formatWriteCommandHelp } from "./message-rewrite-modes.js";
-import { runSeoPulseCommand } from "./seo-pulse-command.js";
-import { runIntentCheckCommand } from "./intent-check-command.js";
-import { pulseBridgeConfigured } from "./pulse-client.js";
 import { meetingNotesDriveConfigured } from "./meeting-notes-drive.js";
 import {
   handleSlackUserOAuthCallback,
@@ -73,33 +70,15 @@ if (receiver) {
       void runMeetingNotesCommand(command.user_id, command.team_id, respond, rest);
       return;
     }
-    if (sub === "seo-pulse" || sub === "client-seo-pulse") {
-      void runSeoPulseCommand(respond, command.text.trim().split(/\s+/).slice(1).join(" "));
-      return;
-    }
-    if (sub === "intent-check") {
-      void runIntentCheckCommand(respond, command.text.trim().split(/\s+/).slice(1).join(" "));
-      return;
-    }
     await respond({
       response_type: "ephemeral",
-      text: `Unknown agent \`${sub}\`. Try \`meeting-notes\`, \`seo-pulse\`, or \`intent-check\`.`,
+      text: `Unknown agent \`${sub}\`. Try \`meeting-notes\`.`,
     });
   });
 
   app.command("/meeting-notes", async ({ command, ack, respond }) => {
     await ack();
     void runMeetingNotesCommand(command.user_id, command.team_id, respond, command.text);
-  });
-
-  app.command("/seo-pulse", async ({ command, ack, respond }) => {
-    await ack();
-    void runSeoPulseCommand(respond, command.text);
-  });
-
-  app.command("/intent-check", async ({ command, ack, respond }) => {
-    await ack();
-    void runIntentCheckCommand(respond, command.text);
   });
 
   registerMeetingNotesInteractions(app);
@@ -138,7 +117,6 @@ api.get("/health", async (_req, res) => {
     openRouter,
     hubSettingsAdmin: hubAdminTokenConfigured(),
     meetingNotesDrive: meetingNotesDriveConfigured(),
-    pulseBridge: pulseBridgeConfigured(),
     slackUserOAuth: await slackUserOAuthConfiguredAsync(),
     slackUserOAuthClientSecretMisconfigured: slackClientSecretMisconfigured(),
   });
