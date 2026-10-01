@@ -1,0 +1,35 @@
+# Reference blueprint (services were created via Render MCP).
+# To adopt as code-managed infra, import or reconcile with the dashboard.
+
+databases:
+  - name: neo-agent-hub-db
+    plan: free
+    region: oregon
+
+services:
+  - type: web
+    name: neo-agent-hub-api
+    runtime: node
+    plan: starter
+    region: oregon
+    repo: https://github.com/sean796/neo-agent-hub
+    branch: main
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start:api
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: neo-agent-hub-db
+          property: connectionString
+
+  - type: web
+    name: neo-agent-hub-web
+    runtime: static
+    repo: https://github.com/sean796/neo-agent-hub
+    branch: main
+    buildCommand: npm ci && npm run build -w @neo-agent-hub/hub-web
+    staticPublishPath: apps/hub-web/dist
+    envVars:
+      - key: VITE_API_BASE
+        value: https://neo-agent-hub-api.onrender.com

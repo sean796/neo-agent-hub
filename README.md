@@ -2,6 +2,16 @@
 
 TypeScript agent platform for Neo Digital: Slack invokes agents; this hub lists and manages them.
 
+**Repository:** https://github.com/sean796/neo-agent-hub (transfer to `neodigitalca` when org admin access is available)
+
+**Production**
+
+| Component | URL |
+|-----------|-----|
+| API | https://neo-agent-hub-api.onrender.com |
+| Hub UI | https://neo-agent-hub-web.onrender.com |
+| Postgres | `neo-agent-hub-db` (Render dashboard) |
+
 ## Stack
 
 - **apps/slack-api** — Express + Slack Bolt (Render web service)
@@ -42,7 +52,7 @@ Create one Slack app **Neo Agent Hub** and set:
 
 ## Environment variables (web service)
 
-- `DATABASE_URL` — from Render Postgres
+- `DATABASE_URL` — in [Render dashboard](https://dashboard.render.com/web/srv-dav99ibncjis73ambvk0), open **Environment** → **Add from database** → select **neo-agent-hub-db** → property **Internal Database URL**, then redeploy
 - `SLACK_BOT_TOKEN`, `SLACK_SIGNING_SECRET`
 - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_OAUTH_REDIRECT_URI`
 - `TOKEN_ENCRYPTION_KEY` — 32-byte secret for token encryption at rest
