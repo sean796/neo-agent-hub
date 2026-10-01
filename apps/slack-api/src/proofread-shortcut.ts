@@ -1,7 +1,7 @@
 import type { App } from "@slack/bolt";
 import {
   getSlackUserAccessToken,
-  getUserConnection,
+  getUserConnectionWithSlackToken,
   hasSlackUserToken,
 } from "./connections.js";
 import { openRouterConfiguredAsync } from "./hub-settings.js";
@@ -86,7 +86,7 @@ export function registerProofreadShortcut(app: App): void {
       return;
     }
 
-    const row = await getUserConnection(actorId, teamId);
+    const row = await getUserConnectionWithSlackToken(actorId, teamId);
     if (!hasSlackUserToken(row)) {
       const connectUrl = buildSlackUserConnectUrl(actorId, teamId);
       await respond({
@@ -98,7 +98,8 @@ export function registerProofreadShortcut(app: App): void {
 
     void (async () => {
       try {
-        const userToken = await getSlackUserAccessToken(actorId, teamId);
+        const tokenTeamId = row?.slack_team_id ?? teamId;
+        const userToken = await getSlackUserAccessToken(actorId, tokenTeamId);
         if (!userToken) {
           await respond({
             response_type: "ephemeral",

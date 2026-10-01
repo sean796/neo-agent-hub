@@ -224,6 +224,10 @@ api.get("/oauth/slack/callback", (req, res) => {
   void handleSlackUserOAuthCallback(req, res);
 });
 
+void initDb().catch((e) => {
+  console.error("initDb on startup failed:", e instanceof Error ? e.message : e);
+});
+
 api.listen(port, () => {
   console.log(`neo-agent-hub-api listening on ${port}`);
 });

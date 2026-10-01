@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { encryptString } from "./crypto.js";
+import { initDb } from "./db.js";
 import { saveSlackUserAccessToken } from "./connections.js";
 import { buildOAuthState, parseOAuthState } from "./oauth-state.js";
 import { apiPublicOrigin } from "./google-oauth.js";
@@ -91,6 +92,7 @@ export async function handleSlackUserOAuthCallback(req: Request, res: Response):
   const tokenJson = (await tokenRes.json()) as {
     ok?: boolean;
     error?: string;
+    team?: { id?: string };
     authed_user?: { id?: string; access_token?: string };
   };
   if (!tokenRes.ok || !tokenJson.ok || !tokenJson.authed_user?.access_token) {
@@ -108,13 +110,20 @@ export async function handleSlackUserOAuthCallback(req: Request, res: Response):
     return;
   }
 
+  await initDb();
+
+  const slackUser = tokenJson.authed_user.id ?? slackUserId;
+  const slackTeamFromToken = tokenJson.team?.id ?? slackTeamId;
   const accessEnc = encryptString(tokenJson.authed_user.access_token);
-  await saveSlackUserAccessToken(slackUserId, slackTeamId, accessEnc);
+  await saveSlackUserAccessToken(slackUser, slackTeamFromToken, accessEnc);
+  if (slackTeamFromToken !== slackTeamId) {
+    await saveSlackUserAccessToken(slackUser, slackTeamId, accessEnc);
+  }
 
   res
     .status(200)
     .type("html")
     .send(
-      `<!doctype html><html><body style="font-family:sans-serif;padding:2rem;background:#09090b;color:#fafafa"><h1>Slack connected</h1><p>Return to Slack. Proofread will rewrite your messages in place.</p></body></html>`,
+      `<!doctype html><html><body style="font-family:sans-serif;padding:2rem;background:#09090b;color:#fafafa"><h1>Slack connected</h1><p>Return to Slack, open the message you want fixed, and run <strong>Proofread message</strong> again from the ⋯ menu.</p></body></html>`,
     );
 }

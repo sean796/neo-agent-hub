@@ -76,3 +76,25 @@ export async function getSlackUserAccessToken(
 export function hasSlackUserToken(row: UserConnectionRow | null): boolean {
   return Boolean(row?.slack_user_token_enc);
 }
+
+/** Resolve stored user token when shortcut team id differs from OAuth (common in DMs). */
+export async function getUserConnectionWithSlackToken(
+  slackUserId: string,
+  slackTeamId: string,
+): Promise<UserConnectionRow | null> {
+  const direct = await getUserConnection(slackUserId, slackTeamId);
+  if (hasSlackUserToken(direct)) return direct;
+
+  const pool = getPool();
+  if (!pool) return direct;
+
+  const res = await pool.query<UserConnectionRow>(
+    `SELECT slack_user_id, slack_team_id, google_refresh_enc, slack_user_token_enc, connected_at, error
+     FROM user_connections
+     WHERE slack_user_id = $1 AND slack_user_token_enc IS NOT NULL
+     ORDER BY connected_at DESC NULLS LAST
+     LIMIT 1`,
+    [slackUserId],
+  );
+  return res.rows[0] ?? direct;
+}
