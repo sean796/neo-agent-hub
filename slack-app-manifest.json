@@ -1,0 +1,61 @@
+{
+  "_metadata": {
+    "major_version": 2,
+    "minor_version": 1
+  },
+  "display_information": {
+    "name": "Neo Agent Hub",
+    "description": "Agency agent hub: run meeting-notes and future agents from Slack.",
+    "background_color": "#09090b"
+  },
+  "features": {
+    "app_home": {
+      "home_tab_enabled": true,
+      "messages_tab_enabled": false,
+      "messages_tab_read_only_enabled": false
+    },
+    "bot_user": {
+      "display_name": "Neo Agent Hub",
+      "always_online": true
+    },
+    "slash_commands": [
+      {
+        "command": "/agent",
+        "description": "List or run Neo Digital agents",
+        "usage_hint": "[agent-id]",
+        "should_escape": false,
+        "url": "https://neo-agent-hub-api.onrender.com/slack/commands"
+      },
+      {
+        "command": "/meeting-notes",
+        "description": "Run Meeting Notes to Checklist agent",
+        "should_escape": false,
+        "url": "https://neo-agent-hub-api.onrender.com/slack/commands"
+      }
+    ]
+  },
+  "oauth_config": {
+    "scopes": {
+      "bot": [
+        "commands",
+        "chat:write",
+        "im:write",
+        "users:read",
+        "app_home:open"
+      ]
+    }
+  },
+  "settings": {
+    "event_subscriptions": {
+      "request_url": "https://neo-agent-hub-api.onrender.com/slack/events",
+      "bot_events": ["app_home_opened"]
+    },
+    "interactivity": {
+      "is_enabled": true,
+      "request_url": "https://neo-agent-hub-api.onrender.com/slack/interactions"
+    },
+    "org_deploy_enabled": false,
+    "socket_mode_enabled": false,
+    "token_rotation_enabled": false
+  }
+}

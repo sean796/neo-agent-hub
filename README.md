@@ -40,6 +40,10 @@ Agent list API: `GET /api/agents`
 
 ## Slack app setup
 
+**Fast path:** at https://api.slack.com/apps choose **Create New App** → **From a manifest** → pick **Neo Digital** workspace → paste [`slack-app-manifest.json`](./slack-app-manifest.json) → create → **Install to Workspace**. Copy **Signing Secret** and **Bot User OAuth Token** into Render (below).
+
+Or configure manually:
+
 Create one Slack app **Neo Agent Hub** and set:
 
 | Setting | URL |
