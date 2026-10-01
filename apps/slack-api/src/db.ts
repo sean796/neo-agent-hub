@@ -1,7 +1,21 @@
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { AGENT_REGISTRY } from "@neo-agent-hub/core";
+
+const moduleDir = path.dirname(fileURLToPath(import.meta.url));
+
+function resolveSchemaPath(): string {
+  const candidates = [
+    path.join(moduleDir, "../../../packages/core/src/db/schema.sql"),
+    path.join(process.cwd(), "packages/core/src/db/schema.sql"),
+  ];
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) return candidate;
+  }
+  throw new Error(`schema.sql not found (tried ${candidates.join(", ")})`);
+}
 
 let pool: pg.Pool | null = null;
 
@@ -9,9 +23,11 @@ export function getPool(): pg.Pool | null {
   const url = process.env.DATABASE_URL;
   if (!url) return null;
   if (!pool) {
+    const isRenderPg =
+      url.includes("render.com") || url.includes("@dpg-") || url.includes("render-internal");
     pool = new pg.Pool({
       connectionString: url,
-      ssl: url.includes("render.com") ? { rejectUnauthorized: false } : undefined,
+      ssl: isRenderPg ? { rejectUnauthorized: false } : undefined,
     });
   }
   return pool;
@@ -21,8 +37,7 @@ export async function initDb(): Promise<{ ok: boolean; error?: string }> {
   const p = getPool();
   if (!p) return { ok: false, error: "DATABASE_URL not set" };
 
-  const schemaPath = path.join(process.cwd(), "packages/core/src/db/schema.sql");
-  const sql = fs.readFileSync(schemaPath, "utf8");
+  const sql = fs.readFileSync(resolveSchemaPath(), "utf8");
   await p.query(sql);
 
   for (const agent of AGENT_REGISTRY) {
