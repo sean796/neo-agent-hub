@@ -8,7 +8,6 @@
     "description": "Agency agent hub: run meeting-notes and future agents from Slack.",
     "background_color": "#09090b"
   },
-  "icon": "https://neo-agent-hub-web.onrender.com/slack-app-icon.png",
   "features": {
     "app_home": {
       "home_tab_enabled": true,
