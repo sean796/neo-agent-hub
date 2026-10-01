@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS user_connections (
   slack_user_id TEXT NOT NULL,
   slack_team_id TEXT NOT NULL,
   google_refresh_enc TEXT,
+  slack_user_token_enc TEXT,
   connected_at TIMESTAMPTZ,
   error TEXT,
   PRIMARY KEY (slack_user_id, slack_team_id)

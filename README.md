@@ -69,7 +69,7 @@ Create one Slack app **Neo Agent Hub** and set:
 | `/meeting-notes` → **Publish to Drive** | Google Doc recap after checklist (re-consent Google if connected before Drive scopes) |
 | `/seo-pulse [site-slug]` | GSC digest when `PULSE_API_BASE` + `HUB_PULSE_SERVICE_TOKEN` are set |
 | `/intent-check` | Registered; SERP compare wiring pending |
-| Message **⋯** → **Connect to apps** → **Proofread message** | AI proofread on any message you open the menu on (ephemeral suggestion; you edit/paste) |
+| Message **⋯** → **Connect to apps** → **Proofread message** | Rewrites **your** message in place (one-time Slack user connect with `chat:write`) |
 
 ## Environment variables (web service)
 

@@ -58,14 +58,19 @@
     ]
   },
   "oauth_config": {
-    "redirect_urls": [],
+    "redirect_urls": [
+      "https://neo-agent-hub-api.onrender.com/oauth/slack/callback"
+    ],
     "scopes": {
       "bot": [
         "commands",
         "chat:write",
         "users:read"
       ]
-    }
+    },
+    "user_scopes": [
+      "chat:write"
+    ]
   },
   "settings": {
     "event_subscriptions": {

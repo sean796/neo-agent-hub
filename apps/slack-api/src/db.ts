@@ -23,6 +23,9 @@ export async function initDb(): Promise<{ ok: boolean; error?: string }> {
   if (!p) return { ok: false, error: "DATABASE_URL not set" };
 
   await p.query(SCHEMA_SQL);
+  await p.query(
+    `ALTER TABLE user_connections ADD COLUMN IF NOT EXISTS slack_user_token_enc TEXT`,
+  );
 
   for (const agent of AGENT_REGISTRY) {
     await p.query(

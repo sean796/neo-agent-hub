@@ -1,8 +1,20 @@
 import type { App } from "@slack/bolt";
+import {
+  getSlackUserAccessToken,
+  getUserConnection,
+  hasSlackUserToken,
+} from "./connections.js";
 import { openRouterConfiguredAsync } from "./hub-settings.js";
 import { PROOFREAD_MESSAGE_CALLBACK_ID, proofreadSlackMessage } from "./proofread-message.js";
+import {
+  buildSlackUserConnectUrl,
+  slackUserOAuthConfigured,
+} from "./slack-user-oauth.js";
+import { updateMessageAsUser } from "./slack-message-update.js";
 
 type SlackMessagePayload = {
+  user?: string;
+  ts?: string;
   text?: string;
   blocks?: Array<{ type?: string; text?: { text?: string } }>;
 };
@@ -23,35 +35,87 @@ export function registerProofreadShortcut(app: App): void {
 
     if (shortcut.type !== "message_action") return;
 
-    const original = textFromMessage(shortcut.message);
-    if (!(await openRouterConfiguredAsync())) {
+    const message = shortcut.message as SlackMessagePayload;
+    const authorId = message.user;
+    const actorId = shortcut.user.id;
+    const channelId = shortcut.channel.id;
+    const messageTs = message.ts;
+
+    if (!messageTs) {
       await respond({
         response_type: "ephemeral",
-        text: "Proofread needs an OpenRouter API key in Neo Agent Hub Settings.",
+        text: "Could not read this message timestamp.",
       });
       return;
     }
 
+    if (authorId && authorId !== actorId) {
+      await respond({
+        response_type: "ephemeral",
+        text: "Proofread can only rewrite messages you posted.",
+      });
+      return;
+    }
+
+    const original = textFromMessage(message);
     if (!original) {
       await respond({
         response_type: "ephemeral",
-        text: "This message has no plain text to proofread (for example only images). Paste the text in a new message and try again.",
+        text: "This message has no text to rewrite (for example only images).",
+      });
+      return;
+    }
+
+    if (!(await openRouterConfiguredAsync())) {
+      await respond({
+        response_type: "ephemeral",
+        text: "OpenRouter is not configured in Neo Agent Hub Settings.",
+      });
+      return;
+    }
+
+    const teamId = shortcut.team?.id ?? shortcut.user.team_id;
+    if (!teamId) return;
+
+    if (!slackUserOAuthConfigured()) {
+      await respond({
+        response_type: "ephemeral",
+        text: "Proofread rewrite is not configured on the server (Slack user OAuth).",
+      });
+      return;
+    }
+
+    const row = await getUserConnection(actorId, teamId);
+    if (!hasSlackUserToken(row)) {
+      const connectUrl = buildSlackUserConnectUrl(actorId, teamId);
+      await respond({
+        response_type: "ephemeral",
+        text: `Connect Slack once so Neo Agent Hub can edit your messages.\n<${connectUrl}|Connect Slack>`,
       });
       return;
     }
 
     void (async () => {
       try {
+        const userToken = await getSlackUserAccessToken(actorId, teamId);
+        if (!userToken) {
+          await respond({
+            response_type: "ephemeral",
+            text: "Slack connect expired. Use the Connect Slack link from Proofread again.",
+          });
+          return;
+        }
         const corrected = await proofreadSlackMessage(original);
-        await respond({
-          response_type: "ephemeral",
-          text: `*Proofread (only you see this)*\n${corrected}\n\n_Use Edit message (E) and paste if you want to replace your post._`,
-        });
+        await updateMessageAsUser(userToken, channelId, messageTs, corrected);
       } catch (e) {
         const msg = e instanceof Error ? e.message : "Proofread failed";
+        const reconnect =
+          msg === "not_authed" || msg === "invalid_auth" || msg === "token_revoked"
+            ? ` ${buildSlackUserConnectUrl(actorId, teamId)}`
+            : "";
         await respond({
           response_type: "ephemeral",
-          text: `Proofread failed: ${msg}`,
+          text: `Proofread failed: ${msg}${reconnect}`,
         });
       }
     })();

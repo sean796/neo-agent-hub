@@ -15,6 +15,11 @@ import { runSeoPulseCommand } from "./seo-pulse-command.js";
 import { runIntentCheckCommand } from "./intent-check-command.js";
 import { pulseBridgeConfigured } from "./pulse-client.js";
 import { meetingNotesDriveConfigured } from "./meeting-notes-drive.js";
+import {
+  handleSlackUserOAuthCallback,
+  handleSlackUserOAuthStart,
+  slackUserOAuthConfigured,
+} from "./slack-user-oauth.js";
 import { assertHubAdmin, hubAdminTokenConfigured } from "./hub-admin.js";
 import {
   getHubSettingsPublic,
@@ -127,6 +132,7 @@ api.get("/health", async (_req, res) => {
     hubSettingsAdmin: hubAdminTokenConfigured(),
     meetingNotesDrive: meetingNotesDriveConfigured(),
     pulseBridge: pulseBridgeConfigured(),
+    slackUserOAuth: slackUserOAuthConfigured(),
   });
 });
 
@@ -187,6 +193,14 @@ api.get("/oauth/google/start", (req, res) => {
 
 api.get("/oauth/google/callback", (req, res) => {
   void handleGoogleOAuthCallback(req, res);
+});
+
+api.get("/oauth/slack/start", (req, res) => {
+  void handleSlackUserOAuthStart(req, res);
+});
+
+api.get("/oauth/slack/callback", (req, res) => {
+  void handleSlackUserOAuthCallback(req, res);
 });
 
 api.listen(port, () => {

@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
-import { encryptString, hmacSign, hmacVerify } from "./crypto.js";
+import { encryptString } from "./crypto.js";
 import { saveGoogleRefreshToken } from "./connections.js";
+import { buildOAuthState, parseOAuthState } from "./oauth-state.js";
 
 const GMAIL_READONLY = "https://www.googleapis.com/auth/gmail.readonly";
 const DRIVE_FILE = "https://www.googleapis.com/auth/drive.file";
@@ -27,31 +28,6 @@ export function apiPublicOrigin(): string {
   return process.env.API_PUBLIC_URL ?? "https://neo-agent-hub-api.onrender.com";
 }
 
-function oauthState(slackUserId: string, slackTeamId: string): string {
-  const payload = JSON.stringify({
-    u: slackUserId,
-    t: slackTeamId,
-    exp: Date.now() + 60 * 60 * 1000,
-  });
-  const payloadB64 = Buffer.from(payload, "utf8").toString("base64url");
-  const sig = hmacSign(payloadB64);
-  return `${payloadB64}.${sig}`;
-}
-
-function parseOAuthState(state: string): { slackUserId: string; slackTeamId: string } {
-  const [payloadB64, sig] = state.split(".");
-  if (!payloadB64 || !sig || !hmacVerify(payloadB64, sig)) {
-    throw new Error("Invalid OAuth state");
-  }
-  const parsed = JSON.parse(Buffer.from(payloadB64, "base64url").toString("utf8")) as {
-    u: string;
-    t: string;
-    exp: number;
-  };
-  if (Date.now() > parsed.exp) throw new Error("OAuth state expired");
-  return { slackUserId: parsed.u, slackTeamId: parsed.t };
-}
-
 export function buildGoogleConnectUrl(slackUserId: string, slackTeamId: string): string {
   const origin = apiPublicOrigin();
   const params = new URLSearchParams({
@@ -73,7 +49,7 @@ export async function handleGoogleOAuthStart(req: Request, res: Response): Promi
     return;
   }
 
-  const state = oauthState(slackUserId, slackTeamId);
+  const state = buildOAuthState(slackUserId, slackTeamId);
   const params = new URLSearchParams({
     client_id: process.env.GOOGLE_CLIENT_ID!,
     redirect_uri: process.env.GOOGLE_OAUTH_REDIRECT_URI!,
