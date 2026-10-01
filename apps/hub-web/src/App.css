@@ -39,6 +39,11 @@
   background: #3f3f46;
 }
 
+.settings-note {
+  margin: 0 0 1rem;
+  max-width: 48rem;
+}
+
 .settings-form {
   display: flex;
   flex-direction: column;

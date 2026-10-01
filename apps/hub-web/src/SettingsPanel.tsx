@@ -64,13 +64,14 @@ export function SettingsPanel() {
     }
   }
 
+  const account = settings?.openRouterAccountEmail ?? "matt@neodigital.ca";
   const status = loading
     ? "Loading settings…"
     : error
       ? `Error: ${error}`
       : settings?.openRouter.configured
-        ? `OpenRouter configured (…${settings.openRouter.suffix ?? "????"})`
-        : "OpenRouter not configured";
+        ? `OpenRouter configured for ${account} (…${settings.openRouter.suffix ?? "????"})`
+        : `OpenRouter not configured (${account})`;
 
   return (
     <>
@@ -78,6 +79,9 @@ export function SettingsPanel() {
         <span>{status}</span>
       </div>
       <main className="content">
+        <p className="muted settings-note">
+          Agent Hub OpenRouter billing: {account}. Use the API key from that account only (not Cursor MCP).
+        </p>
         <form className="settings-form" onSubmit={(e) => void onSave(e)}>
           <div className="settings-row">
             <input

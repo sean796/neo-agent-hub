@@ -7,6 +7,7 @@ export function apiUrl(path: string): string {
 export interface HubSettingsPublic {
   openRouter: { configured: boolean; suffix: string | null };
   openRouterModel: string;
+  openRouterAccountEmail: string;
 }
 
 export async function fetchHubSettings(): Promise<HubSettingsPublic> {

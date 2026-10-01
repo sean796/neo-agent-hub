@@ -4,9 +4,13 @@ import { getPool } from "./db.js";
 const KEY_OPENROUTER = "openrouter_api_key";
 const KEY_OPENROUTER_MODEL = "openrouter_model";
 
+/** Neo Digital OpenRouter billing login for Agent Hub only (not Cursor MCP). */
+export const HUB_OPENROUTER_ACCOUNT_EMAIL = "matt@neodigital.ca";
+
 export interface HubSettingsPublic {
   openRouter: { configured: boolean; suffix: string | null };
   openRouterModel: string;
+  openRouterAccountEmail: string;
 }
 
 function keySuffix(raw: string): string | null {
@@ -39,22 +43,22 @@ async function writeEncrypted(key: string, plain: string): Promise<void> {
   );
 }
 
-/** Copy Render env into DB once when UI has no key yet. */
+/** Sync Render `OPENROUTER_API_KEY` (Neo Digital / matt@) into encrypted DB storage. */
 export async function seedHubSettingsFromEnv(): Promise<void> {
   const pool = getPool();
   if (!pool) return;
-  const existing = await readEncrypted(KEY_OPENROUTER);
-  if (existing?.trim()) return;
   const fromEnv = process.env.OPENROUTER_API_KEY?.trim();
   if (!fromEnv) return;
+  const existing = await readEncrypted(KEY_OPENROUTER);
+  if (existing?.trim() === fromEnv) return;
   await writeEncrypted(KEY_OPENROUTER, fromEnv);
 }
 
+/** Agent Hub meeting-notes and settings use this key only (Postgres), never Cursor MCP. */
 export async function getOpenRouterApiKey(): Promise<string | null> {
   const fromDb = await readEncrypted(KEY_OPENROUTER);
   if (fromDb?.trim()) return fromDb.trim();
-  const fromEnv = process.env.OPENROUTER_API_KEY?.trim();
-  return fromEnv ?? null;
+  return null;
 }
 
 export async function getOpenRouterModel(): Promise<string> {
@@ -76,6 +80,7 @@ export async function getHubSettingsPublic(): Promise<HubSettingsPublic> {
       suffix: key ? keySuffix(key) : null,
     },
     openRouterModel: model,
+    openRouterAccountEmail: HUB_OPENROUTER_ACCOUNT_EMAIL,
   };
 }
 
