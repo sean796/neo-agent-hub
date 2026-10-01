@@ -1,21 +1,5 @@
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import pg from "pg";
-import { AGENT_REGISTRY } from "@neo-agent-hub/core";
-
-const moduleDir = path.dirname(fileURLToPath(import.meta.url));
-
-function resolveSchemaPath(): string {
-  const candidates = [
-    path.join(moduleDir, "../../../packages/core/src/db/schema.sql"),
-    path.join(process.cwd(), "packages/core/src/db/schema.sql"),
-  ];
-  for (const candidate of candidates) {
-    if (fs.existsSync(candidate)) return candidate;
-  }
-  throw new Error(`schema.sql not found (tried ${candidates.join(", ")})`);
-}
+import { AGENT_REGISTRY, SCHEMA_SQL } from "@neo-agent-hub/core";
 
 let pool: pg.Pool | null = null;
 
@@ -37,8 +21,7 @@ export async function initDb(): Promise<{ ok: boolean; error?: string }> {
   const p = getPool();
   if (!p) return { ok: false, error: "DATABASE_URL not set" };
 
-  const sql = fs.readFileSync(resolveSchemaPath(), "utf8");
-  await p.query(sql);
+  await p.query(SCHEMA_SQL);
 
   for (const agent of AGENT_REGISTRY) {
     await p.query(
