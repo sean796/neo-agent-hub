@@ -8,9 +8,10 @@ export const PROOFREAD_RESUME_TEXT_MAX = 2000;
 
 export type ProofreadOAuthResume = {
   channelId: string;
-  messageTs: string;
+  messageTs?: string;
   originalText?: string;
   mode?: RewriteMode;
+  draftOnly?: boolean;
 };
 
 export function buildOAuthState(
@@ -23,7 +24,7 @@ export function buildOAuthState(
     t: slackTeamId,
     exp: Date.now() + STATE_TTL_MS,
   };
-  if (resume?.channelId && resume.messageTs) {
+  if (resume?.channelId) {
     payload.r = {
       c: resume.channelId,
       m: resume.messageTs,
@@ -32,6 +33,7 @@ export function buildOAuthState(
           ? resume.originalText
           : undefined,
       w: resume.mode,
+      d: resume.draftOnly ? 1 : undefined,
     };
   }
   const payloadB64 = Buffer.from(JSON.stringify(payload), "utf8").toString("base64url");
@@ -52,17 +54,18 @@ export function parseOAuthState(state: string): {
     u: string;
     t: string;
     exp: number;
-    r?: { c?: string; m?: string; o?: string; w?: string };
+    r?: { c?: string; m?: string; o?: string; w?: string; d?: number };
   };
   if (Date.now() > parsed.exp) throw new Error("OAuth state expired");
   const modeFromState = parsed.r?.w ? rewriteModeFromToken(parsed.r.w) : null;
   const resume =
-    parsed.r?.c && parsed.r.m
+    parsed.r?.c
       ? {
           channelId: parsed.r.c,
           messageTs: parsed.r.m,
           originalText: parsed.r.o,
           mode: modeFromState ?? undefined,
+          draftOnly: Boolean(parsed.r.d) || !parsed.r.m,
         }
       : undefined;
   return { slackUserId: parsed.u, slackTeamId: parsed.t, resume };

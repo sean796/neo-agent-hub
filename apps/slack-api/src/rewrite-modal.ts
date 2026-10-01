@@ -6,7 +6,7 @@ import {
   type RewriteMode,
   rewriteModeFromToken,
 } from "./message-rewrite-modes.js";
-import { rewriteSlackMessage } from "./message-rewrite.js";
+import { deliverRewriteToComposer } from "./write-draft-flow.js";
 import { openRouterConfiguredAsync } from "./hub-settings.js";
 import {
   getSlackUserAccessToken,
@@ -35,15 +35,21 @@ function modeOptions() {
   }));
 }
 
+type ComposeModalMeta = {
+  channelId: string;
+  userId: string;
+  teamId: string;
+};
+
 export function buildComposeModalView(
   defaultMode: RewriteMode,
   draftText = "",
-  channelId?: string,
+  meta?: ComposeModalMeta,
 ) {
   return {
     type: "modal" as const,
     callback_id: COMPOSE_MODAL_CALLBACK,
-    private_metadata: channelId ? JSON.stringify({ channelId }) : undefined,
+    private_metadata: meta ? JSON.stringify(meta) : undefined,
     title: { type: "plain_text" as const, text: "AI compose" },
     submit: { type: "plain_text" as const, text: "Rewrite" },
     close: { type: "plain_text" as const, text: "Cancel" },
@@ -127,11 +133,13 @@ export async function openComposeRewriteModal(
   triggerId: string,
   defaultMode: RewriteMode,
   draftText: string,
-  channelId?: string,
+  channelId: string,
+  userId: string,
+  teamId: string,
 ): Promise<void> {
   await client.views.open({
     trigger_id: triggerId,
-    view: buildComposeModalView(defaultMode, draftText, channelId),
+    view: buildComposeModalView(defaultMode, draftText, { channelId, userId, teamId }),
   });
 }
 
@@ -161,7 +169,7 @@ function parseDraftFromView(values: Record<string, Record<string, unknown>>): st
 }
 
 export function registerRewriteModals(app: App): void {
-  app.view(COMPOSE_MODAL_CALLBACK, async ({ ack, view, body, client }) => {
+  app.view(COMPOSE_MODAL_CALLBACK, async ({ ack, view, client }) => {
     const mode = parseModeFromView(view.state.values);
     const draft = parseDraftFromView(view.state.values);
     if (!draft) {
@@ -178,47 +186,35 @@ export function registerRewriteModals(app: App): void {
       });
       return;
     }
+    let meta: ComposeModalMeta | null = null;
+    try {
+      meta = JSON.parse(view.private_metadata || "{}") as ComposeModalMeta;
+    } catch {
+      meta = null;
+    }
+    if (!meta?.channelId || !meta.userId || !meta.teamId) {
+      await ack({
+        response_action: "errors",
+        errors: { draft_block: "Missing channel context. Run /write from the conversation again." },
+      });
+      return;
+    }
     await ack();
     try {
-      const rewritten = await rewriteSlackMessage(draft, mode);
-      await client.views.update({
-        view_id: view.id,
-        view: {
-          type: "modal",
-          callback_id: COMPOSE_MODAL_CALLBACK,
-          title: { type: "plain_text", text: "AI compose" },
-          close: { type: "plain_text", text: "Done" },
-          blocks: [
-            {
-              type: "section",
-              text: {
-                type: "mrkdwn",
-                text: "*Copy into the message box* (Slack does not let apps paste for you):",
-              },
-            },
-            {
-              type: "section",
-              text: { type: "mrkdwn", text: `\`\`\`${rewritten}\`\`\`` },
-            },
-          ],
-        },
+      await deliverRewriteToComposer({
+        userId: meta.userId,
+        teamId: meta.teamId,
+        channelId: meta.channelId,
+        mode,
+        originalText: draft,
+        client,
       });
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Rewrite failed";
-      await client.views.update({
-        view_id: view.id,
-        view: {
-          type: "modal",
-          callback_id: COMPOSE_MODAL_CALLBACK,
-          title: { type: "plain_text", text: "AI compose" },
-          close: { type: "plain_text", text: "Close" },
-          blocks: [
-            {
-              type: "section",
-              text: { type: "mrkdwn", text: `*Rewrite failed*\n${msg}` },
-            },
-          ],
-        },
+      await client.chat.postEphemeral({
+        channel: meta.channelId,
+        user: meta.userId,
+        text: `Rewrite failed: ${msg}`,
       });
     }
   });

@@ -3,6 +3,8 @@ import { encryptString } from "./crypto.js";
 import { initDb } from "./db.js";
 import { saveSlackUserAccessToken } from "./connections.js";
 import { applyRewriteInPlace } from "./rewrite-in-place.js";
+import { createSlackMessageDraft } from "./slack-drafts.js";
+import { rewriteSlackMessage } from "./message-rewrite.js";
 import { rewriteModeFromToken, type RewriteMode } from "./message-rewrite-modes.js";
 import { openRouterConfiguredAsync } from "./hub-settings.js";
 import {
@@ -49,6 +51,7 @@ export function buildSlackUserConnectUrl(
     );
   }
   if (resume?.mode) params.set("rewrite_mode", resume.mode);
+  if (resume?.draftOnly) params.set("draft_only", "1");
   return `${origin}/oauth/slack/start?${params.toString()}`;
 }
 
@@ -79,10 +82,10 @@ export async function handleSlackUserOAuthStart(req: Request, res: Response): Pr
   const modeRaw = String(req.query.rewrite_mode ?? "");
   const mode = rewriteModeFromToken(modeRaw) ?? undefined;
 
-  const resume: ProofreadOAuthResume | undefined =
-    channelId && messageTs
-      ? { channelId, messageTs, originalText, mode }
-      : undefined;
+  const draftOnly = String(req.query.draft_only ?? "") === "1";
+  const resume: ProofreadOAuthResume | undefined = channelId
+    ? { channelId, messageTs: messageTs || undefined, originalText, mode, draftOnly }
+    : undefined;
 
   const state = buildOAuthState(slackUserId, slackTeamId, resume);
   const params = new URLSearchParams({
@@ -169,34 +172,41 @@ export async function handleSlackUserOAuthCallback(req: Request, res: Response):
 
   if (resume && (await openRouterConfiguredAsync())) {
     let original = resume.originalText?.trim() ?? "";
-    if (!original) {
+    if (!original && resume.messageTs) {
       const botToken = process.env.SLACK_BOT_TOKEN?.trim();
       if (botToken) {
-        original = (await fetchSlackMessageText(botToken, resume.channelId, resume.messageTs)) ?? "";
+        original =
+          (await fetchSlackMessageText(botToken, resume.channelId, resume.messageTs)) ?? "";
       }
     }
     if (original) {
       try {
         const mode: RewriteMode = resume.mode ?? "correct";
-        await applyRewriteInPlace(
-          userToken,
-          resume.channelId,
-          resume.messageTs,
-          original,
-          mode,
-        );
-        proofreadDone = true;
-        proofreadNote = "Your message was updated in Slack. You can close this tab.";
+        const rewritten = await rewriteSlackMessage(original, mode);
+        if (resume.draftOnly || !resume.messageTs) {
+          await createSlackMessageDraft(userToken, resume.channelId, rewritten);
+          proofreadDone = true;
+          proofreadNote = "Your rewrite is in the Slack message box. Review and send when ready.";
+        } else {
+          await applyRewriteInPlace(
+            userToken,
+            resume.channelId,
+            resume.messageTs,
+            original,
+            mode,
+          );
+          proofreadDone = true;
+          proofreadNote = "Your message was updated in Slack. You can close this tab.";
+        }
       } catch (e) {
-        proofreadNote = `Connected, but rewrite failed: ${e instanceof Error ? e.message : "unknown error"}. Run Write from the message menu once in Slack.`;
+        proofreadNote = `Connected, but rewrite failed: ${e instanceof Error ? e.message : "unknown error"}. Run /write again in Slack.`;
       }
     } else {
-      proofreadNote =
-        "Connected. Run Proofread message again on that message (the bot could not read message text).";
+      proofreadNote = "Connected. Run /write with your draft text again.";
     }
   }
 
-  const title = proofreadDone ? "Message proofread" : "Slack connected";
+  const title = proofreadDone ? "Write ready" : "Slack connected";
   res
     .status(200)
     .type("html")

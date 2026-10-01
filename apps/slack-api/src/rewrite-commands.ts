@@ -6,8 +6,8 @@ import {
   rewriteModeFromToken,
   WRITE_SLASH_COMMAND,
 } from "./message-rewrite-modes.js";
-import { rewriteSlackMessage } from "./message-rewrite.js";
 import { openComposeRewriteModal } from "./rewrite-modal.js";
+import { deliverRewriteToComposer } from "./write-draft-flow.js";
 
 const DEFAULT_MODE: RewriteMode = "polish";
 
@@ -52,16 +52,27 @@ export function registerRewriteSlashCommands(app: App): void {
         });
         return;
       }
-      await openComposeRewriteModal(client, body.trigger_id, mode, "", command.channel_id);
+      await openComposeRewriteModal(
+        client,
+        body.trigger_id,
+        mode,
+        "",
+        command.channel_id,
+        command.user_id,
+        command.team_id,
+      );
       return;
     }
 
     void (async () => {
       try {
-        const rewritten = await rewriteSlackMessage(draft, mode);
-        await respond({
-          response_type: "ephemeral",
-          text: `*${mode}*\nCopy into your message:\n\`\`\`${rewritten}\`\`\``,
+        await deliverRewriteToComposer({
+          userId: command.user_id,
+          teamId: command.team_id,
+          channelId: command.channel_id,
+          mode,
+          originalText: draft,
+          respond,
         });
       } catch (e) {
         const msg = e instanceof Error ? e.message : "Rewrite failed";

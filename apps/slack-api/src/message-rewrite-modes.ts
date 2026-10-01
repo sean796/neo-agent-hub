@@ -82,11 +82,11 @@ export const WRITE_SLASH_COMMAND = "/write";
 export function formatWriteCommandHelp(): string {
   const styles = REWRITE_MODES.map((m) => `\`${m}\``).join(", ");
   return (
-    `*${WRITE_SLASH_COMMAND}* rewrites a draft before you send it.\n` +
+    `*${WRITE_SLASH_COMMAND}* puts the rewrite in your message box (after one-time Slack connect).\n` +
     `• \`${WRITE_SLASH_COMMAND}\` opens the editor\n` +
     `• \`${WRITE_SLASH_COMMAND} polish your text here\`\n` +
     `• Styles: ${styles} (default \`polish\`)\n` +
-    `Sent messages: use *Write* from the message ⋯ menu to edit in place.`
+    `Already sent: message ⋯ → *Write:* … to edit in place.`
   );
 }
 

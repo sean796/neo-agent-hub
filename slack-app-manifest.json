@@ -97,7 +97,9 @@
         "mpim:history"
       ],
       "user": [
-        "chat:write"
+        "chat:write",
+        "im:write",
+        "mpim:write"
       ]
     }
   },
