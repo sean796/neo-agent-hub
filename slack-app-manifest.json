@@ -69,14 +69,14 @@
       {
         "command": "/intent-check",
         "description": "Check draft vs search intent (beta)",
-        "usage_hint": "query | outline or URL",
+        "usage_hint": "query and outline or URL",
         "should_escape": false,
         "url": "https://neo-agent-hub-api.onrender.com/slack/commands"
       },
       {
         "command": "/write",
         "description": "AI rewrite a draft (correct, polish, shorten, and more)",
-        "usage_hint": "[style] your draft — or /write for editor",
+        "usage_hint": "[style] draft text, or leave empty for editor",
         "should_escape": false,
         "url": "https://neo-agent-hub-api.onrender.com/slack/commands"
       }
