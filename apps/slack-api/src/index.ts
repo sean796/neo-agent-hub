@@ -61,7 +61,7 @@ if (receiver) {
       );
       await respond({
         response_type: "ephemeral",
-        text: `*Neo Agent Hub*\n${lines.join("\n")}\n\n${formatWriteCommandHelp()}\n\nRun \`/agent meeting-notes\` or \`/meeting-notes\`.`,
+        text: `*Neo Agent Hub*\n${lines.join("\n")}\n\n${formatWriteCommandHelp()}`,
       });
       return;
     }
@@ -72,7 +72,7 @@ if (receiver) {
     }
     await respond({
       response_type: "ephemeral",
-      text: `Unknown agent \`${sub}\`. Try \`meeting-notes\`.`,
+      text: `Unknown agent \`${sub}\`. Try \`meeting-notes\` or \`write\` (or use \`/write\`).`,
     });
   });
 

@@ -36,8 +36,11 @@ export function AgentsPanel() {
     };
   }, []);
 
-  const subtitle =
-    loading ? "Loading…" : error ? `Error: ${error}` : "Available in Slack via slash commands and message shortcuts.";
+  const subtitle = loading
+    ? "Loading registry…"
+    : error
+      ? `Error: ${error}`
+      : `${agents.length} agents in registry`;
 
   return (
     <div className="hub-page">
