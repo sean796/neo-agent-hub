@@ -2,7 +2,15 @@ import type { Request, Response } from "express";
 import { encryptString } from "./crypto.js";
 import { initDb } from "./db.js";
 import { saveSlackUserAccessToken } from "./connections.js";
-import { buildOAuthState, parseOAuthState } from "./oauth-state.js";
+import { applyProofreadInPlace } from "./proofread-in-place.js";
+import { openRouterConfiguredAsync } from "./hub-settings.js";
+import {
+  buildOAuthState,
+  parseOAuthState,
+  PROOFREAD_RESUME_TEXT_MAX,
+  type ProofreadOAuthResume,
+} from "./oauth-state.js";
+import { fetchSlackMessageText } from "./slack-fetch-message.js";
 import { apiPublicOrigin } from "./google-oauth.js";
 import {
   resolveSlackClientSecret,
@@ -21,12 +29,24 @@ export function slackUserOAuthConfigured(): boolean {
 
 export { slackUserOAuthConfiguredAsync };
 
-export function buildSlackUserConnectUrl(slackUserId: string, slackTeamId: string): string {
+export function buildSlackUserConnectUrl(
+  slackUserId: string,
+  slackTeamId: string,
+  resume?: ProofreadOAuthResume,
+): string {
   const origin = apiPublicOrigin();
   const params = new URLSearchParams({
     slack_user_id: slackUserId,
     slack_team_id: slackTeamId,
   });
+  if (resume?.channelId) params.set("channel_id", resume.channelId);
+  if (resume?.messageTs) params.set("message_ts", resume.messageTs);
+  if (resume?.originalText && resume.originalText.length <= PROOFREAD_RESUME_TEXT_MAX) {
+    params.set(
+      "resume_text",
+      Buffer.from(resume.originalText, "utf8").toString("base64url"),
+    );
+  }
   return `${origin}/oauth/slack/start?${params.toString()}`;
 }
 
@@ -37,12 +57,29 @@ export async function handleSlackUserOAuthStart(req: Request, res: Response): Pr
   }
   const slackUserId = String(req.query.slack_user_id ?? "");
   const slackTeamId = String(req.query.slack_team_id ?? "");
+  const channelId = String(req.query.channel_id ?? "");
+  const messageTs = String(req.query.message_ts ?? "");
   if (!slackUserId || !slackTeamId) {
     res.status(400).send("Missing slack_user_id or slack_team_id.");
     return;
   }
 
-  const state = buildOAuthState(slackUserId, slackTeamId);
+  let originalText: string | undefined;
+  const resumeTextB64 = String(req.query.resume_text ?? "");
+  if (resumeTextB64) {
+    try {
+      originalText = Buffer.from(resumeTextB64, "base64url").toString("utf8");
+    } catch {
+      originalText = undefined;
+    }
+  }
+
+  const resume: ProofreadOAuthResume | undefined =
+    channelId && messageTs
+      ? { channelId, messageTs, originalText }
+      : undefined;
+
+  const state = buildOAuthState(slackUserId, slackTeamId, resume);
   const params = new URLSearchParams({
     client_id: slackOAuthClientId()!,
     user_scope: SLACK_USER_SCOPE,
@@ -71,8 +108,9 @@ export async function handleSlackUserOAuthCallback(req: Request, res: Response):
 
   let slackUserId: string;
   let slackTeamId: string;
+  let resume: ProofreadOAuthResume | undefined;
   try {
-    ({ slackUserId, slackTeamId } = parseOAuthState(state));
+    ({ slackUserId, slackTeamId, resume } = parseOAuthState(state));
   } catch (e) {
     res.status(400).send(e instanceof Error ? e.message : "Invalid state");
     return;
@@ -120,10 +158,37 @@ export async function handleSlackUserOAuthCallback(req: Request, res: Response):
     await saveSlackUserAccessToken(slackUser, slackTeamId, accessEnc);
   }
 
+  const userToken = tokenJson.authed_user.access_token;
+  let proofreadDone = false;
+  let proofreadNote = "Return to Slack. Proofread is ready from the ⋯ menu on your messages.";
+
+  if (resume && (await openRouterConfiguredAsync())) {
+    let original = resume.originalText?.trim() ?? "";
+    if (!original) {
+      const botToken = process.env.SLACK_BOT_TOKEN?.trim();
+      if (botToken) {
+        original = (await fetchSlackMessageText(botToken, resume.channelId, resume.messageTs)) ?? "";
+      }
+    }
+    if (original) {
+      try {
+        await applyProofreadInPlace(userToken, resume.channelId, resume.messageTs, original);
+        proofreadDone = true;
+        proofreadNote = "Your message was updated in Slack. You can close this tab.";
+      } catch (e) {
+        proofreadNote = `Connected, but proofread failed: ${e instanceof Error ? e.message : "unknown error"}. Run Proofread message once in Slack.`;
+      }
+    } else {
+      proofreadNote =
+        "Connected. Run Proofread message again on that message (the bot could not read message text).";
+    }
+  }
+
+  const title = proofreadDone ? "Message proofread" : "Slack connected";
   res
     .status(200)
     .type("html")
     .send(
-      `<!doctype html><html><body style="font-family:sans-serif;padding:2rem;background:#09090b;color:#fafafa"><h1>Slack connected</h1><p>Return to Slack, open the message you want fixed, and run <strong>Proofread message</strong> again from the ⋯ menu.</p></body></html>`,
+      `<!doctype html><html><body style="font-family:sans-serif;padding:2rem;background:#09090b;color:#fafafa"><h1>${title}</h1><p>${proofreadNote}</p></body></html>`,
     );
 }

@@ -65,7 +65,11 @@
       "bot": [
         "commands",
         "chat:write",
-        "users:read"
+        "users:read",
+        "channels:history",
+        "groups:history",
+        "im:history",
+        "mpim:history"
       ],
       "user": [
         "chat:write"

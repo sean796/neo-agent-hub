@@ -5,10 +5,10 @@ import {
   hasSlackUserToken,
 } from "./connections.js";
 import { openRouterConfiguredAsync } from "./hub-settings.js";
-import { PROOFREAD_MESSAGE_CALLBACK_ID, proofreadSlackMessage } from "./proofread-message.js";
+import { PROOFREAD_MESSAGE_CALLBACK_ID } from "./proofread-message.js";
 import { slackClientSecretMisconfigured } from "./slack-oauth-config.js";
 import { buildSlackUserConnectUrl, slackUserOAuthConfiguredAsync } from "./slack-user-oauth.js";
-import { updateMessageAsUser } from "./slack-message-update.js";
+import { applyProofreadInPlace } from "./proofread-in-place.js";
 
 type SlackMessagePayload = {
   user?: string;
@@ -88,10 +88,33 @@ export function registerProofreadShortcut(app: App): void {
 
     const row = await getUserConnectionWithSlackToken(actorId, teamId);
     if (!hasSlackUserToken(row)) {
-      const connectUrl = buildSlackUserConnectUrl(actorId, teamId);
+      const connectUrl = buildSlackUserConnectUrl(actorId, teamId, {
+        channelId,
+        messageTs,
+        originalText: original,
+      });
       await respond({
         response_type: "ephemeral",
-        text: `Connect Slack once so Neo Agent Hub can edit your messages.\n<${connectUrl}|Connect Slack>`,
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: "One-time Slack approval so Neo Agent Hub can edit *your* messages. Then this message is proofread automatically.",
+            },
+          },
+          {
+            type: "actions",
+            elements: [
+              {
+                type: "button",
+                text: { type: "plain_text", text: "Authorize & proofread" },
+                url: connectUrl,
+                action_id: "proofread_oauth_start",
+              },
+            ],
+          },
+        ],
       });
       return;
     }
@@ -107,8 +130,7 @@ export function registerProofreadShortcut(app: App): void {
           });
           return;
         }
-        const corrected = await proofreadSlackMessage(original);
-        await updateMessageAsUser(userToken, channelId, messageTs, corrected);
+        await applyProofreadInPlace(userToken, channelId, messageTs, original);
       } catch (e) {
         const msg = e instanceof Error ? e.message : "Proofread failed";
         const reconnect =
