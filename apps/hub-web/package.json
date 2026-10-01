@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "npm run build -w @neo-agent-hub/core",
     "build": "vite build",
     "preview": "vite preview"
   },
