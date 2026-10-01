@@ -1,6 +1,7 @@
 import type { App } from "@slack/bolt";
 import { openRouterConfiguredAsync } from "./hub-settings.js";
 import {
+  DEFAULT_WRITE_MODE,
   formatWriteCommandHelp,
   type RewriteMode,
   rewriteModeFromToken,
@@ -9,7 +10,7 @@ import {
 import { openComposeRewriteModal } from "./rewrite-modal.js";
 import { deliverRewriteToComposer } from "./write-draft-flow.js";
 
-const DEFAULT_MODE: RewriteMode = "polish";
+const DEFAULT_MODE: RewriteMode = DEFAULT_WRITE_MODE;
 
 function parseWriteCommandText(text: string): { mode: RewriteMode; body: string } {
   const trimmed = text.trim();

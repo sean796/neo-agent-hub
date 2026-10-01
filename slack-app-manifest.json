@@ -75,8 +75,8 @@
       },
       {
         "command": "/write",
-        "description": "AI rewrite a draft for the message box",
-        "usage_hint": "style then draft or empty",
+        "description": "Fix or rewrite a draft for the message box",
+        "usage_hint": "correct or polish then draft",
         "should_escape": false,
         "url": "https://neo-agent-hub-api.onrender.com/slack/commands"
       }

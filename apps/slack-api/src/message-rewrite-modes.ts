@@ -63,12 +63,14 @@ export function rewriteModeFromToken(token: string): RewriteMode | null {
   return null;
 }
 
+export const DEFAULT_WRITE_MODE: RewriteMode = "correct";
+
 export function systemPromptForMode(mode: RewriteMode): string {
   const base =
-    "Rewrite Slack message text for Neo Digital (agency). Keep names, links, and intent. Do not add em dashes. Do not wrap in quotes. Output JSON only with correctedText as the full replacement message.";
+    "Edit Slack message text for Neo Digital (agency). Keep names and links. Do not add em dashes. Do not wrap in quotes. Output JSON only with correctedText as the full replacement message.";
   const byMode: Record<RewriteMode, string> = {
-    correct: `${base} Fix grammar, spelling, and clarity. Light tone touch only.`,
-    polish: `${base} Improve flow and professional tone without changing meaning.`,
+    correct: `${base} MINIMAL copy-edit only. Keep the author's exact words, slang, and casual tone. Fix spelling, punctuation, and clear grammar mistakes only. Do not replace phrases (keep "hey whats up" as "Hey, what's up?" not "Hello"). Do not formalize, summarize, or rephrase for style.`,
+    polish: `${base} Smooth flow and tone but keep the same words and casual level when the message is informal. Do not replace slang with formal greetings.`,
     shorten: `${base} Make shorter and scannable. Remove filler.`,
     friendly: `${base} Warmer and approachable while staying professional.`,
     formal: `${base} More formal and client-ready.`,
@@ -85,7 +87,7 @@ export function formatWriteCommandHelp(): string {
     `*${WRITE_SLASH_COMMAND}* puts the rewrite in your message box (after one-time Slack connect).\n` +
     `• \`${WRITE_SLASH_COMMAND}\` opens the editor\n` +
     `• \`${WRITE_SLASH_COMMAND} polish your text here\`\n` +
-    `• Styles: ${styles} (default \`polish\`)\n` +
+    `• Styles: ${styles} (default \`correct\` = grammar only, keeps your words)\n` +
     `Already sent: message ⋯ → *Write:* … to edit in place.`
   );
 }

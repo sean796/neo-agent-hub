@@ -37,7 +37,7 @@ export async function rewriteSlackMessage(
     },
     body: JSON.stringify({
       model,
-      temperature: 0.2,
+      temperature: mode === "correct" ? 0 : 0.2,
       messages: [
         { role: "system", content: systemPromptForMode(mode) },
         { role: "user", content: trimmed.slice(0, 12_000) },
