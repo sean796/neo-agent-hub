@@ -10,7 +10,7 @@ export async function runMeetingNotesCommand(
   if (!googleOAuthConfigured()) {
     await respond({
       response_type: "ephemeral",
-      text: "Google OAuth is not configured on the server yet. Ask an admin to set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_OAUTH_REDIRECT_URI, and TOKEN_ENCRYPTION_KEY on Render.",
+      text: "Hub Google login is not available. Contact Neo Digital ops.",
     });
     return;
   }
@@ -25,7 +25,7 @@ export async function runMeetingNotesCommand(
           type: "section",
           text: {
             type: "mrkdwn",
-            text: "*Meeting Notes*\nConnect your Google account once so Neo Agent Hub can read Gemini meeting notes in Gmail.",
+            text: `*Meeting Notes*\nConnect your Google account once (Gmail read-only).\n<${connectUrl}|Connect Google>`,
           },
         },
         {

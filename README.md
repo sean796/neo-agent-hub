@@ -35,7 +35,7 @@ npm run dev:web   # Vite dev server; set VITE_API_BASE=http://localhost:10000
 | Static | `neo-agent-hub-web` |
 | Postgres | `neo-agent-hub-db` |
 
-Health check: `GET /health`  
+Health check: `GET /health` (includes `googleOAuth` when OAuth env is set)  
 Agent list API: `GET /api/agents`
 
 ## Slack app setup
@@ -52,21 +52,36 @@ Create one Slack app **Neo Agent Hub** and set:
 | Slash commands | `/agent`, `/meeting-notes` → `https://<api-host>/slack/commands` |
 | Interactivity | `https://<api-host>/slack/interactions` |
 
-**OAuth scopes (bot):** `commands`, `chat:write`, `im:write`, `users:read`, `app_home:open`
+**OAuth scopes (bot):** `commands`, `chat:write`, `im:write`, `users:read`
 
 ## Environment variables (web service)
 
-- `DATABASE_URL` — in [Render dashboard](https://dashboard.render.com/web/srv-dav99ibncjis73ambvk0), open **Environment** → **Add from database** → select **neo-agent-hub-db** → property **Internal Database URL**, then redeploy
+- `DATABASE_URL` — Render **Internal Database URL** for `neo-agent-hub-db`
 - `SLACK_BOT_TOKEN`, `SLACK_SIGNING_SECRET`
-- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_OAUTH_REDIRECT_URI`
+- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_OAUTH_REDIRECT_URI` (see Google OAuth below)
 - `TOKEN_ENCRYPTION_KEY` — 32-byte secret for token encryption at rest
+- `API_PUBLIC_URL` — public API origin (no trailing slash)
 - `OPENROUTER_API_KEY` — when meeting-notes LLM step is enabled
 
 ## Static site
 
 - `VITE_API_BASE` — public URL of `neo-agent-hub-api` (no trailing slash)
 
-## Google OAuth (planned)
+## Google OAuth (meeting-notes, one client, per-user tokens)
 
-- `GET /oauth/google/start` — begins user connect flow from Slack
-- `GET /oauth/google/callback` — stores encrypted refresh token keyed by Slack user
+Use **one** OAuth 2.0 **Web application** client in Google Cloud (project e.g. `neopulse-505422`). Do not create credentials per Slack user.
+
+| GCP (once) | Render (once) | Runtime (automatic per user) |
+|------------|---------------|------------------------------|
+| Web client + Gmail API + `gmail.readonly` on consent screen | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, redirect URI, encryption key | Connect URL carries `slack_user_id` + signed `state`; Postgres stores encrypted refresh token per `(slack_user_id, slack_team_id)` |
+
+**Authorized redirect URI:** `https://neo-agent-hub-api.onrender.com/oauth/google/callback`
+
+**Slack flow:** teammate runs `/meeting-notes` → ephemeral **Connect Google** (button + link) → browser consent → success page → `/meeting-notes` again uses stored token.
+
+**Routes**
+
+- `GET /oauth/google/start?slack_user_id=&slack_team_id=` — begins connect from Slack
+- `GET /oauth/google/callback` — exchanges code and stores encrypted refresh token
+
+Ops: `GET /health` must report `googleOAuth: true` before expecting the Connect UI in Slack.
