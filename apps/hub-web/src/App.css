@@ -1,52 +1,5 @@
-.hub {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.band {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0 1rem;
-  min-height: 2rem;
-  font-size: 1rem;
-}
-
-.band-title {
-  background: rgb(24 24 27 / 0.5);
-}
-
-.brand-mark {
-  width: 1.25rem;
-  height: 1.25rem;
-  flex-shrink: 0;
-}
-
-.band-title h1 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 700;
-}
-
-.title-nav {
-  margin-left: auto;
-  display: flex;
-  gap: 0.5rem;
-}
-
-.tab {
-  border: 0;
-  cursor: pointer;
-  color: #fafafa;
-}
-
-.tab-active {
-  background: #3f3f46;
-}
-
 .settings-note {
-  margin: 0 0 1rem;
+  margin: 0 0 1.5rem;
   max-width: 48rem;
 }
 
@@ -80,24 +33,19 @@
   padding: 0 1rem;
   border: 0;
   border-radius: 0;
-  background: #3f3f46;
-  color: #fafafa;
+  background: #282828;
+  color: #ffffff;
   font-size: 1rem;
   cursor: pointer;
+}
+
+.btn:hover:not(:disabled) {
+  background: #3e3e3e;
 }
 
 .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-}
-
-.band-toolbar {
-  background: #000;
-}
-
-.band-progress {
-  background: rgb(24 24 27 / 0.5);
-  color: #a1a1aa;
 }
 
 .field {
@@ -106,23 +54,13 @@
   padding: 0 0.75rem;
   border: 0;
   border-radius: 0;
-  background: #18181b;
-  color: #fafafa;
+  background: #181818;
+  color: #ffffff;
   font-size: 1rem;
 }
 
 .field::placeholder {
-  color: #a1a1aa;
-}
-
-.count {
-  margin-left: auto;
-  color: #a1a1aa;
-}
-
-.content {
-  flex: 1;
-  padding: 1rem;
+  color: #b3b3b3;
 }
 
 .agent-list {
@@ -135,9 +73,10 @@
 }
 
 .agent-row {
-  padding: 1rem;
-  background: #18181b;
+  padding: 1rem 1.25rem;
+  background: #181818;
   min-height: 5.5rem;
+  border-radius: 0;
 }
 
 .agent-head {
@@ -149,12 +88,13 @@
 
 .pill {
   padding: 0.125rem 0.5rem;
-  background: #27272a;
+  background: #282828;
   font-size: 1rem;
+  border-radius: 0;
 }
 
 .pill-active {
-  color: #4ade80;
+  color: #1db954;
 }
 
 .pill-beta {
@@ -162,28 +102,30 @@
 }
 
 .pill-disabled {
-  color: #a1a1aa;
+  color: #b3b3b3;
 }
 
 .muted {
+  margin: 0;
+  color: #b3b3b3;
+  font-size: 1rem;
+}
+
+.agent-row .muted {
   margin: 0.5rem 0 0;
-  color: #a1a1aa;
 }
 
 .mono {
   margin: 0.25rem 0 0;
   font-family: ui-monospace, monospace;
-  color: #71717a;
-}
-
-.tabular-nums {
-  font-variant-numeric: tabular-nums;
+  color: #727272;
+  font-size: 1rem;
 }
 
 .skeleton .skeleton-line {
   display: block;
   height: 1rem;
-  background: #27272a;
+  background: #282828;
   margin-bottom: 0.5rem;
 }
 

@@ -1,3 +1,4 @@
+import { HUB_DEFAULT_OPENROUTER_MODEL } from "@neo-agent-hub/core";
 import { encryptString, decryptString } from "./crypto.js";
 import { getPool } from "./db.js";
 
@@ -59,6 +60,18 @@ export async function seedHubSettingsFromEnv(): Promise<void> {
     const existingSlack = await readEncrypted(KEY_SLACK_CLIENT_SECRET);
     if (existingSlack?.trim() !== slackSecret) await writeEncrypted(KEY_SLACK_CLIENT_SECRET, slackSecret);
   }
+  const modelFromEnv = process.env.OPENROUTER_MODEL?.trim();
+  if (modelFromEnv) {
+    const existingModel = await readEncrypted(KEY_OPENROUTER_MODEL);
+    if (existingModel?.trim() !== modelFromEnv) {
+      await writeEncrypted(KEY_OPENROUTER_MODEL, modelFromEnv);
+    }
+  } else {
+    const existingModel = await readEncrypted(KEY_OPENROUTER_MODEL);
+    if (!existingModel?.trim()) {
+      await writeEncrypted(KEY_OPENROUTER_MODEL, HUB_DEFAULT_OPENROUTER_MODEL);
+    }
+  }
 }
 
 export async function getSlackClientSecret(): Promise<string | null> {
@@ -95,7 +108,7 @@ export async function getOpenRouterApiKey(): Promise<string | null> {
 export async function getOpenRouterModel(): Promise<string> {
   const fromDb = await readEncrypted(KEY_OPENROUTER_MODEL);
   if (fromDb?.trim()) return fromDb.trim();
-  return process.env.OPENROUTER_MODEL?.trim() || "google/gemini-2.5-flash";
+  return process.env.OPENROUTER_MODEL?.trim() || HUB_DEFAULT_OPENROUTER_MODEL;
 }
 
 export async function openRouterConfiguredAsync(): Promise<boolean> {

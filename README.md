@@ -80,7 +80,7 @@ Create one Slack app **Neo Agent Hub** and set:
 - `API_PUBLIC_URL` — public API origin (no trailing slash)
 - `OPENROUTER_API_KEY` — Neo Digital OpenRouter key for **matt@neodigital.ca** only (bootstraps encrypted DB on deploy; not Cursor MCP)
 - `HUB_ADMIN_TOKEN` — required to save settings from the hub UI (header `X-Hub-Admin-Token`)
-- `OPENROUTER_MODEL` — optional; default `google/gemini-2.5-flash` (editable in Settings)
+- `OPENROUTER_MODEL` — optional; default `deepseek/deepseek-v4.1-flash` (editable in Settings)
 
 **Hub settings UI:** https://neo-agent-hub-web.onrender.com → **Settings** → admin token + OpenRouter key. Runtime reads the encrypted Postgres key only. Billing account: **matt@neodigital.ca**.
 
