@@ -49,9 +49,7 @@ export function App() {
   return (
     <div className="hub">
       <header className="band band-title">
-        <span className="icon" aria-hidden>
-          ◆
-        </span>
+        <img className="brand-mark" src="/neo-mark.svg" alt="" width={20} height={20} />
         <h1>Neo Agent Hub</h1>
         <nav className="title-nav" aria-label="Hub sections">
           <button

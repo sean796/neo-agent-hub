@@ -4,6 +4,7 @@ import {
   fetchLatestGeminiMeetingNote,
 } from "./gmail-api.js";
 import { buildChecklistFromNote, formatChecklistSlackMrkdwn } from "./meeting-notes-checklist.js";
+import { checklistResponseBlocks } from "./meeting-notes-response-blocks.js";
 import { ensureMeetingNotesReady, meetingNotesFailureMessage } from "./meeting-notes-ready.js";
 
 export async function runChecklistForMessageId(
@@ -19,7 +20,11 @@ export async function runChecklistForMessageId(
     const note = await fetchGeminiMeetingNoteById(refreshToken, messageId);
     const checklist = await buildChecklistFromNote(note);
     const text = formatChecklistSlackMrkdwn(note, checklist);
-    await respond({ response_type: "ephemeral", text });
+    await respond({
+      response_type: "ephemeral",
+      text,
+      blocks: checklistResponseBlocks(text, note.messageId),
+    });
   } catch (e) {
     await respond({
       response_type: "ephemeral",
@@ -47,7 +52,11 @@ export async function runChecklistForLatest(
     }
     const checklist = await buildChecklistFromNote(note);
     const text = formatChecklistSlackMrkdwn(note, checklist);
-    await respond({ response_type: "ephemeral", text });
+    await respond({
+      response_type: "ephemeral",
+      text,
+      blocks: checklistResponseBlocks(text, note.messageId),
+    });
   } catch (e) {
     await respond({
       response_type: "ephemeral",

@@ -2,6 +2,8 @@
 
 TypeScript agent platform for Neo Digital: Slack invokes agents; this hub lists and manages them.
 
+**Strategy and build maps:** [Q4 priority selection](./docs/strategy/q4-priority-selection.md), [one-pagers](./docs/one-pagers/), [engineering maps](./docs/engineering/).
+
 **Repository:** https://github.com/sean796/neo-agent-hub (transfer to `neodigitalca` when org admin access is available)
 
 **Production**
@@ -42,6 +44,8 @@ Agent list API: `GET /api/agents`
 
 **Fast path:** at https://api.slack.com/apps choose **Create New App** → **From a manifest** → pick **Neo Digital** workspace → paste [`slack-app-manifest.json`](./slack-app-manifest.json) → create → **Install to Workspace**. Copy **Signing Secret** and **Bot User OAuth Token** into Render (below).
 
+**App icon (slash-command autocomplete):** Neo Digital mark (lime `#9AE941` on `#09090b`). Source SVG: [`assets/neo-mark.svg`](./assets/neo-mark.svg). Slack needs a **512×512 PNG**: hosted at `https://neo-agent-hub-web.onrender.com/slack-app-icon.png` (built from [`apps/hub-web/public/slack-app-icon.svg`](./apps/hub-web/public/slack-app-icon.svg)). After deploying hub-web, **App Manifest** → **Update from manifest** (or **Basic Information** → upload [`assets/slack-app-icon-512.png`](./assets/slack-app-icon-512.png)) so `/meeting-notes` shows the green mark instead of the default notebook.
+
 Or configure manually:
 
 Create one Slack app **Neo Agent Hub** and set:
@@ -62,6 +66,10 @@ Create one Slack app **Neo Agent Hub** and set:
 | `/meeting-notes latest` | Task list + checklist from the newest Gemini note |
 | `/agent meeting-notes` | Same as `/meeting-notes` |
 | `/agent meeting-notes latest` | Same as `/meeting-notes latest` |
+| `/meeting-notes` → **Publish to Drive** | Google Doc recap after checklist (re-consent Google if connected before Drive scopes) |
+| `/seo-pulse [site-slug]` | GSC digest when `PULSE_API_BASE` + `HUB_PULSE_SERVICE_TOKEN` are set |
+| `/intent-check` | Registered; SERP compare wiring pending |
+| Message **⋯** → **Connect to apps** → **Proofread message** | AI proofread on any message you open the menu on (ephemeral suggestion; you edit/paste) |
 
 ## Environment variables (web service)
 
@@ -86,7 +94,7 @@ Use **one** OAuth 2.0 **Web application** client in Google Cloud (project e.g. `
 
 | GCP (once) | Render (once) | Runtime (automatic per user) |
 |------------|---------------|------------------------------|
-| Web client + Gmail API + `gmail.readonly` on consent screen | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, redirect URI, encryption key | Connect URL carries `slack_user_id` + signed `state`; Postgres stores encrypted refresh token per `(slack_user_id, slack_team_id)` |
+| Web client + Gmail API + scopes `gmail.readonly`, `drive.file`, `documents` on consent screen | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, redirect URI, encryption key; optional `MEETING_NOTES_DRIVE_TEMPLATE_ID`, `MEETING_NOTES_DRIVE_FOLDER_ID` | Connect URL carries `slack_user_id` + signed `state`; Postgres stores encrypted refresh token per `(slack_user_id, slack_team_id)` |
 
 **Authorized redirect URI:** `https://neo-agent-hub-api.onrender.com/oauth/google/callback`
 

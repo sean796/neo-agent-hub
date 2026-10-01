@@ -1,4 +1,4 @@
-import type { App, RespondArguments } from "@slack/bolt";
+import type { App, RespondArguments, RespondFn } from "@slack/bolt";
 import {
   CREATE_ACTION_ID,
   LATEST_ACTION_ID,
@@ -8,10 +8,10 @@ import {
   refreshPickerPreview,
 } from "./meeting-notes-picker.js";
 import { runChecklistForLatest, runChecklistForMessageId } from "./meeting-notes-run.js";
+import { runPublishToDriveForMessageId } from "./meeting-notes-publish.js";
+import { PUBLISH_DRIVE_ACTION_ID } from "./meeting-notes-response-blocks.js";
 import { getRefreshTokenForSlackUser } from "./gmail-api.js";
 import { meetingNotesFailureMessage } from "./meeting-notes-ready.js";
-import type { RespondFn } from "@slack/bolt";
-
 function respondFnFromUrl(responseUrl: string): RespondFn {
   return async (message) => {
     const args: RespondArguments & { blocks?: unknown[] } =
@@ -95,6 +95,42 @@ export function registerMeetingNotesInteractions(app: App): void {
     }
 
     await runChecklistForMessageId(userId, teamId, messageId, respondFnFromUrl(responseUrl));
+  });
+
+  app.action(PUBLISH_DRIVE_ACTION_ID, async ({ ack, body, action, client }) => {
+    await ack();
+    const blockBody = body as {
+      response_url?: string;
+      team?: { id?: string };
+      channel?: { id?: string };
+      user: { id: string };
+    };
+    const responseUrl = blockBody.response_url;
+    const teamId = blockBody.team?.id;
+    const channelId = blockBody.channel?.id;
+    const userId = blockBody.user.id;
+    const button = action as { value?: string };
+    const messageId = button.value?.trim();
+    if (!messageId || !teamId) return;
+
+    const respond: RespondFn = async (message) => {
+      const args: RespondArguments =
+        typeof message === "string" ? { text: message } : (message as RespondArguments);
+      const text = args.text ?? "Meeting Notes";
+      if (responseUrl) {
+        await postResponseUrl(responseUrl, {
+          replace_original: false,
+          response_type: "ephemeral",
+          text,
+        });
+        return;
+      }
+      if (channelId) {
+        await client.chat.postEphemeral({ channel: channelId, user: userId, text });
+      }
+    };
+
+    void runPublishToDriveForMessageId(userId, teamId, messageId, respond);
   });
 
   app.action(LATEST_ACTION_ID, async ({ ack, body }) => {

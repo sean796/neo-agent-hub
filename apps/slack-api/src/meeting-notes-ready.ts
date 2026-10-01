@@ -28,7 +28,7 @@ export async function ensureMeetingNotesReady(
           type: "section",
           text: {
             type: "mrkdwn",
-            text: `*Meeting Notes*\nConnect your Google account once (Gmail read-only).\n<${connectUrl}|Connect Google>`,
+            text: `*Meeting Notes*\nConnect Google once (Gmail read, Drive publish for recap docs).\n<${connectUrl}|Connect Google>`,
           },
         },
         {

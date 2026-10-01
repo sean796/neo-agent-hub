@@ -10,6 +10,11 @@ import {
 } from "./google-oauth.js";
 import { runMeetingNotesCommand } from "./meeting-notes-command.js";
 import { registerMeetingNotesInteractions } from "./meeting-notes-interactions.js";
+import { registerProofreadShortcut } from "./proofread-shortcut.js";
+import { runSeoPulseCommand } from "./seo-pulse-command.js";
+import { runIntentCheckCommand } from "./intent-check-command.js";
+import { pulseBridgeConfigured } from "./pulse-client.js";
+import { meetingNotesDriveConfigured } from "./meeting-notes-drive.js";
 import { assertHubAdmin, hubAdminTokenConfigured } from "./hub-admin.js";
 import {
   getHubSettingsPublic,
@@ -58,9 +63,17 @@ if (receiver) {
       void runMeetingNotesCommand(command.user_id, command.team_id, respond, rest);
       return;
     }
+    if (sub === "seo-pulse" || sub === "client-seo-pulse") {
+      void runSeoPulseCommand(respond, command.text.trim().split(/\s+/).slice(1).join(" "));
+      return;
+    }
+    if (sub === "intent-check") {
+      void runIntentCheckCommand(respond, command.text.trim().split(/\s+/).slice(1).join(" "));
+      return;
+    }
     await respond({
       response_type: "ephemeral",
-      text: `Unknown agent \`${sub}\`. Try \`meeting-notes\`.`,
+      text: `Unknown agent \`${sub}\`. Try \`meeting-notes\`, \`seo-pulse\`, or \`intent-check\`.`,
     });
   });
 
@@ -69,7 +82,18 @@ if (receiver) {
     void runMeetingNotesCommand(command.user_id, command.team_id, respond, command.text);
   });
 
+  app.command("/seo-pulse", async ({ command, ack, respond }) => {
+    await ack();
+    void runSeoPulseCommand(respond, command.text);
+  });
+
+  app.command("/intent-check", async ({ command, ack, respond }) => {
+    await ack();
+    void runIntentCheckCommand(respond, command.text);
+  });
+
   registerMeetingNotesInteractions(app);
+  registerProofreadShortcut(app);
 }
 
 const api = express();
@@ -101,6 +125,8 @@ api.get("/health", async (_req, res) => {
     googleOAuth: googleOAuthConfigured(),
     openRouter,
     hubSettingsAdmin: hubAdminTokenConfigured(),
+    meetingNotesDrive: meetingNotesDriveConfigured(),
+    pulseBridge: pulseBridgeConfigured(),
   });
 });
 

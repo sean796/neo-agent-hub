@@ -3,6 +3,8 @@ import { encryptString, hmacSign, hmacVerify } from "./crypto.js";
 import { saveGoogleRefreshToken } from "./connections.js";
 
 const GMAIL_READONLY = "https://www.googleapis.com/auth/gmail.readonly";
+const DRIVE_FILE = "https://www.googleapis.com/auth/drive.file";
+const DOCUMENTS = "https://www.googleapis.com/auth/documents";
 
 export function googleOAuthConfigured(): boolean {
   return Boolean(
@@ -76,7 +78,7 @@ export async function handleGoogleOAuthStart(req: Request, res: Response): Promi
     client_id: process.env.GOOGLE_CLIENT_ID!,
     redirect_uri: process.env.GOOGLE_OAUTH_REDIRECT_URI!,
     response_type: "code",
-    scope: ["openid", "email", GMAIL_READONLY].join(" "),
+    scope: ["openid", "email", GMAIL_READONLY, DRIVE_FILE, DOCUMENTS].join(" "),
     access_type: "offline",
     prompt: "consent",
     state,
@@ -139,6 +141,6 @@ export async function handleGoogleOAuthCallback(req: Request, res: Response): Pr
     .status(200)
     .type("html")
     .send(
-      `<!doctype html><html><body style="font-family:sans-serif;padding:2rem;background:#09090b;color:#fafafa"><h1>Google connected</h1><p>Return to Slack and run <code>/meeting-notes</code> again.</p></body></html>`,
+      `<!doctype html><html><body style="font-family:sans-serif;padding:2rem;background:#09090b;color:#fafafa"><h1>Google connected</h1><p>Gmail and Drive publish are linked. Return to Slack and run <code>/meeting-notes</code> again.</p></body></html>`,
     );
 }

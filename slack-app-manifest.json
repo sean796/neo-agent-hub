@@ -8,6 +8,7 @@
     "description": "Agency agent hub: run meeting-notes and future agents from Slack.",
     "background_color": "#09090b"
   },
+  "icon": "https://neo-agent-hub-web.onrender.com/slack-app-icon.png",
   "features": {
     "app_home": {
       "home_tab_enabled": true,
@@ -18,6 +19,14 @@
       "display_name": "Neo Agent Hub",
       "always_online": true
     },
+    "shortcuts": [
+      {
+        "name": "Proofread message",
+        "type": "message",
+        "callback_id": "proofread_message",
+        "description": "Fix grammar and tone with AI (Neo Agent Hub)"
+      }
+    ],
     "slash_commands": [
       {
         "command": "/agent",
@@ -28,8 +37,22 @@
       },
       {
         "command": "/meeting-notes",
-        "description": "Run Meeting Notes to Checklist agent",
+        "description": "Meeting notes to task list and checklist",
         "usage_hint": "[latest]",
+        "should_escape": false,
+        "url": "https://neo-agent-hub-api.onrender.com/slack/commands"
+      },
+      {
+        "command": "/seo-pulse",
+        "description": "GSC digest and one recommended action",
+        "usage_hint": "[site-slug]",
+        "should_escape": false,
+        "url": "https://neo-agent-hub-api.onrender.com/slack/commands"
+      },
+      {
+        "command": "/intent-check",
+        "description": "Check draft vs search intent (beta)",
+        "usage_hint": "query | outline or URL",
         "should_escape": false,
         "url": "https://neo-agent-hub-api.onrender.com/slack/commands"
       }
