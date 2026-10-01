@@ -5,10 +5,14 @@ import {
   hasSlackUserToken,
 } from "./connections.js";
 import { openRouterConfiguredAsync } from "./hub-settings.js";
-import { PROOFREAD_MESSAGE_CALLBACK_ID } from "./proofread-message.js";
+import {
+  authorizeButtonLabel,
+  type RewriteMode,
+} from "./message-rewrite-modes.js";
 import { slackClientSecretMisconfigured } from "./slack-oauth-config.js";
 import { buildSlackUserConnectUrl, slackUserOAuthConfiguredAsync } from "./slack-user-oauth.js";
-import { applyProofreadInPlace } from "./proofread-in-place.js";
+import { applyRewriteInPlace } from "./rewrite-in-place.js";
+import { openMessageRewriteModal } from "./rewrite-modal.js";
 
 type SlackMessagePayload = {
   user?: string;
@@ -17,7 +21,7 @@ type SlackMessagePayload = {
   blocks?: Array<{ type?: string; text?: { text?: string } }>;
 };
 
-function textFromMessage(message: SlackMessagePayload): string {
+export function textFromSlackMessage(message: SlackMessagePayload): string {
   const plain = message.text?.trim() ?? "";
   if (plain) return plain;
   const fromBlocks = (message.blocks ?? [])
@@ -27,10 +31,14 @@ function textFromMessage(message: SlackMessagePayload): string {
   return fromBlocks.trim();
 }
 
-export function registerProofreadShortcut(app: App): void {
-  app.shortcut(PROOFREAD_MESSAGE_CALLBACK_ID, async ({ shortcut, ack, respond }) => {
+export function registerMessageRewriteHandler(
+  app: App,
+  callbackId: string,
+  mode: RewriteMode,
+  options?: { openAdjustModal?: boolean },
+): void {
+  app.shortcut(callbackId, async ({ shortcut, ack, respond, client }) => {
     await ack();
-
     if (shortcut.type !== "message_action") return;
 
     const message = shortcut.message as SlackMessagePayload;
@@ -50,16 +58,16 @@ export function registerProofreadShortcut(app: App): void {
     if (authorId && authorId !== actorId) {
       await respond({
         response_type: "ephemeral",
-        text: "Proofread can only rewrite messages you posted.",
+        text: "AI rewrite only works on messages you posted.",
       });
       return;
     }
 
-    const original = textFromMessage(message);
+    const original = textFromSlackMessage(message);
     if (!original) {
       await respond({
         response_type: "ephemeral",
-        text: "This message has no text to rewrite (for example only images).",
+        text: "This message has no text to rewrite.",
       });
       return;
     }
@@ -75,13 +83,25 @@ export function registerProofreadShortcut(app: App): void {
     const teamId = shortcut.team?.id ?? shortcut.user.team_id;
     if (!teamId) return;
 
+    if (options?.openAdjustModal && "trigger_id" in shortcut && shortcut.trigger_id) {
+      await openMessageRewriteModal(client, shortcut.trigger_id, {
+        channelId,
+        messageTs,
+        actorId,
+        teamId,
+        originalText: original,
+        defaultMode: mode,
+      });
+      return;
+    }
+
     if (!(await slackUserOAuthConfiguredAsync())) {
       const misSecret = slackClientSecretMisconfigured();
       await respond({
         response_type: "ephemeral",
         text: misSecret
           ? "Slack OAuth client secret on Render is wrong: use Client Secret from api.slack.com Basic Information, not Signing Secret."
-          : "Proofread rewrite is not configured. Set SLACK_CLIENT_ID, SLACK_CLIENT_SECRET, and SLACK_USER_OAUTH_REDIRECT_URI on Render.",
+          : "In-place rewrite is not configured on the server (Slack user OAuth).",
       });
       return;
     }
@@ -92,6 +112,7 @@ export function registerProofreadShortcut(app: App): void {
         channelId,
         messageTs,
         originalText: original,
+        mode,
       });
       await respond({
         response_type: "ephemeral",
@@ -100,7 +121,7 @@ export function registerProofreadShortcut(app: App): void {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: "One-time Slack approval so Neo Agent Hub can edit *your* messages. Then this message is proofread automatically.",
+              text: "One-time Slack approval so Neo Agent Hub can edit *your* messages. Then this rewrite runs automatically.",
             },
           },
           {
@@ -108,9 +129,9 @@ export function registerProofreadShortcut(app: App): void {
             elements: [
               {
                 type: "button",
-                text: { type: "plain_text", text: "Authorize & proofread" },
+                text: { type: "plain_text", text: authorizeButtonLabel(mode) },
                 url: connectUrl,
-                action_id: "proofread_oauth_start",
+                action_id: `rewrite_oauth_${mode}`,
               },
             ],
           },
@@ -126,20 +147,16 @@ export function registerProofreadShortcut(app: App): void {
         if (!userToken) {
           await respond({
             response_type: "ephemeral",
-            text: "Slack connect expired. Use the Connect Slack link from Proofread again.",
+            text: "Slack connect expired. Run the message shortcut again.",
           });
           return;
         }
-        await applyProofreadInPlace(userToken, channelId, messageTs, original);
+        await applyRewriteInPlace(userToken, channelId, messageTs, original, mode);
       } catch (e) {
-        const msg = e instanceof Error ? e.message : "Proofread failed";
-        const reconnect =
-          msg === "not_authed" || msg === "invalid_auth" || msg === "token_revoked"
-            ? ` ${buildSlackUserConnectUrl(actorId, teamId)}`
-            : "";
+        const msg = e instanceof Error ? e.message : "Rewrite failed";
         await respond({
           response_type: "ephemeral",
-          text: `Proofread failed: ${msg}${reconnect}`,
+          text: `Rewrite failed: ${msg}`,
         });
       }
     })();

@@ -20,10 +20,28 @@
     },
     "shortcuts": [
       {
-        "name": "Proofread message",
+        "name": "Write: correct",
         "type": "message",
         "callback_id": "proofread_message",
-        "description": "Fix grammar and tone with AI (Neo Agent Hub)"
+        "description": "Fix grammar and clarity in place (/write correct)"
+      },
+      {
+        "name": "Write: polish",
+        "type": "message",
+        "callback_id": "polish_message",
+        "description": "Polish tone in place (/write polish)"
+      },
+      {
+        "name": "Write: shorten",
+        "type": "message",
+        "callback_id": "shorten_message",
+        "description": "Tighter wording in place (/write shorten)"
+      },
+      {
+        "name": "Write: adjust",
+        "type": "message",
+        "callback_id": "adjust_message",
+        "description": "Pick a style and rewrite in place (/write)"
       }
     ],
     "slash_commands": [
@@ -52,6 +70,13 @@
         "command": "/intent-check",
         "description": "Check draft vs search intent (beta)",
         "usage_hint": "query | outline or URL",
+        "should_escape": false,
+        "url": "https://neo-agent-hub-api.onrender.com/slack/commands"
+      },
+      {
+        "command": "/write",
+        "description": "AI rewrite a draft (correct, polish, shorten, and more)",
+        "usage_hint": "[style] your draft — or /write for editor",
         "should_escape": false,
         "url": "https://neo-agent-hub-api.onrender.com/slack/commands"
       }

@@ -2,7 +2,8 @@ import type { Request, Response } from "express";
 import { encryptString } from "./crypto.js";
 import { initDb } from "./db.js";
 import { saveSlackUserAccessToken } from "./connections.js";
-import { applyProofreadInPlace } from "./proofread-in-place.js";
+import { applyRewriteInPlace } from "./rewrite-in-place.js";
+import { rewriteModeFromToken, type RewriteMode } from "./message-rewrite-modes.js";
 import { openRouterConfiguredAsync } from "./hub-settings.js";
 import {
   buildOAuthState,
@@ -47,6 +48,7 @@ export function buildSlackUserConnectUrl(
       Buffer.from(resume.originalText, "utf8").toString("base64url"),
     );
   }
+  if (resume?.mode) params.set("rewrite_mode", resume.mode);
   return `${origin}/oauth/slack/start?${params.toString()}`;
 }
 
@@ -74,9 +76,12 @@ export async function handleSlackUserOAuthStart(req: Request, res: Response): Pr
     }
   }
 
+  const modeRaw = String(req.query.rewrite_mode ?? "");
+  const mode = rewriteModeFromToken(modeRaw) ?? undefined;
+
   const resume: ProofreadOAuthResume | undefined =
     channelId && messageTs
-      ? { channelId, messageTs, originalText }
+      ? { channelId, messageTs, originalText, mode }
       : undefined;
 
   const state = buildOAuthState(slackUserId, slackTeamId, resume);
@@ -172,11 +177,18 @@ export async function handleSlackUserOAuthCallback(req: Request, res: Response):
     }
     if (original) {
       try {
-        await applyProofreadInPlace(userToken, resume.channelId, resume.messageTs, original);
+        const mode: RewriteMode = resume.mode ?? "correct";
+        await applyRewriteInPlace(
+          userToken,
+          resume.channelId,
+          resume.messageTs,
+          original,
+          mode,
+        );
         proofreadDone = true;
         proofreadNote = "Your message was updated in Slack. You can close this tab.";
       } catch (e) {
-        proofreadNote = `Connected, but proofread failed: ${e instanceof Error ? e.message : "unknown error"}. Run Proofread message once in Slack.`;
+        proofreadNote = `Connected, but rewrite failed: ${e instanceof Error ? e.message : "unknown error"}. Run Write from the message menu once in Slack.`;
       }
     } else {
       proofreadNote =

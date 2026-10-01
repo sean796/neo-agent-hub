@@ -10,7 +10,10 @@ import {
 } from "./google-oauth.js";
 import { runMeetingNotesCommand } from "./meeting-notes-command.js";
 import { registerMeetingNotesInteractions } from "./meeting-notes-interactions.js";
-import { registerProofreadShortcut } from "./proofread-shortcut.js";
+import { registerRewriteSlashCommands } from "./rewrite-commands.js";
+import { registerRewriteModals } from "./rewrite-modal.js";
+import { registerRewriteShortcuts } from "./rewrite-shortcuts.js";
+import { formatWriteCommandHelp } from "./message-rewrite-modes.js";
 import { runSeoPulseCommand } from "./seo-pulse-command.js";
 import { runIntentCheckCommand } from "./intent-check-command.js";
 import { pulseBridgeConfigured } from "./pulse-client.js";
@@ -61,7 +64,7 @@ if (receiver) {
       );
       await respond({
         response_type: "ephemeral",
-        text: `*Neo Agent Hub*\n${lines.join("\n")}\n\nRun \`/agent meeting-notes\` or \`/meeting-notes\`.`,
+        text: `*Neo Agent Hub*\n${lines.join("\n")}\n\n${formatWriteCommandHelp()}\n\nRun \`/agent meeting-notes\` or \`/meeting-notes\`.`,
       });
       return;
     }
@@ -100,7 +103,9 @@ if (receiver) {
   });
 
   registerMeetingNotesInteractions(app);
-  registerProofreadShortcut(app);
+  registerRewriteSlashCommands(app);
+  registerRewriteShortcuts(app);
+  registerRewriteModals(app);
 }
 
 const api = express();

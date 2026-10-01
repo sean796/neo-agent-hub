@@ -1,4 +1,6 @@
 import { hmacSign, hmacVerify } from "./crypto.js";
+import type { RewriteMode } from "./message-rewrite-modes.js";
+import { rewriteModeFromToken } from "./message-rewrite-modes.js";
 
 const STATE_TTL_MS = 60 * 60 * 1000;
 /** Keep resume text in signed state when under this size (avoids huge OAuth URLs). */
@@ -8,6 +10,7 @@ export type ProofreadOAuthResume = {
   channelId: string;
   messageTs: string;
   originalText?: string;
+  mode?: RewriteMode;
 };
 
 export function buildOAuthState(
@@ -28,6 +31,7 @@ export function buildOAuthState(
         resume.originalText && resume.originalText.length <= PROOFREAD_RESUME_TEXT_MAX
           ? resume.originalText
           : undefined,
+      w: resume.mode,
     };
   }
   const payloadB64 = Buffer.from(JSON.stringify(payload), "utf8").toString("base64url");
@@ -48,15 +52,17 @@ export function parseOAuthState(state: string): {
     u: string;
     t: string;
     exp: number;
-    r?: { c?: string; m?: string; o?: string };
+    r?: { c?: string; m?: string; o?: string; w?: string };
   };
   if (Date.now() > parsed.exp) throw new Error("OAuth state expired");
+  const modeFromState = parsed.r?.w ? rewriteModeFromToken(parsed.r.w) : null;
   const resume =
     parsed.r?.c && parsed.r.m
       ? {
           channelId: parsed.r.c,
           messageTs: parsed.r.m,
           originalText: parsed.r.o,
+          mode: modeFromState ?? undefined,
         }
       : undefined;
   return { slackUserId: parsed.u, slackTeamId: parsed.t, resume };
