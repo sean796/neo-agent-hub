@@ -67,9 +67,9 @@ export const DEFAULT_WRITE_MODE: RewriteMode = "correct";
 
 export function systemPromptForMode(mode: RewriteMode): string {
   const base =
-    "Edit Slack message text for Neo Digital (agency). Keep names and links. Do not add em dashes. Do not wrap in quotes. Output JSON only with correctedText as the full replacement message.";
+    "Edit Slack message text for Neo Digital (agency). Keep names and links. Do not add em dashes. Do not wrap in quotes. Output JSON only with correctedText as the full replacement message. If the message has profanity, slurs, or obscene language, remove or replace those words with clean wording suitable for work Slack. Do not leave censored asterisk placeholders unless the author used them.";
   const byMode: Record<RewriteMode, string> = {
-    correct: `${base} MINIMAL copy-edit only. Keep the author's exact words, slang, and casual tone. Fix spelling, punctuation, and clear grammar mistakes only. Do not replace phrases (keep "hey whats up" as "Hey, what's up?" not "Hello"). Do not formalize, summarize, or rephrase for style.`,
+    correct: `${base} MINIMAL copy-edit only. Keep the author's exact words, slang, and casual tone except profanity as above. Fix spelling, punctuation, and clear grammar mistakes only. Do not replace clean phrases (keep "hey whats up" as "Hey, what's up?" not "Hello"). Do not formalize, summarize, or rephrase for style.`,
     polish: `${base} Smooth flow and tone but keep the same words and casual level when the message is informal. Do not replace slang with formal greetings.`,
     shorten: `${base} Make shorter and scannable. Remove filler.`,
     friendly: `${base} Warmer and approachable while staying professional.`,
