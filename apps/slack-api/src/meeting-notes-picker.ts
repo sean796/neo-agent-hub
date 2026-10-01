@@ -49,7 +49,7 @@ export function buildPickerBlocks(
       type: "section",
       text: {
         type: "mrkdwn",
-        text: "*Meeting Notes*\nPick a Gemini note, preview it, then create a checklist.",
+        text: "*Meeting Notes*\nPick a Gemini note, preview it, then create a task list and checklist.",
       },
     },
     {
@@ -81,13 +81,13 @@ export function buildPickerBlocks(
       elements: [
         {
           type: "button",
-          text: { type: "plain_text", text: "Create checklist" },
+          text: { type: "plain_text", text: "Create task list" },
           action_id: CREATE_ACTION_ID,
           style: "primary",
         },
         {
           type: "button",
-          text: { type: "plain_text", text: "Latest checklist" },
+          text: { type: "plain_text", text: "Latest task list" },
           action_id: LATEST_ACTION_ID,
         },
       ],

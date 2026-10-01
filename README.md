@@ -58,8 +58,8 @@ Create one Slack app **Neo Agent Hub** and set:
 
 | Command | What it does |
 |---------|----------------|
-| `/meeting-notes` | Picker: choose a Gemini note (subject preview), then **Create checklist** |
-| `/meeting-notes latest` | Checklist from the newest Gemini note only |
+| `/meeting-notes` | Picker: choose a Gemini note (subject preview), then **Create task list** |
+| `/meeting-notes latest` | Task list + checklist from the newest Gemini note |
 | `/agent meeting-notes` | Same as `/meeting-notes` |
 | `/agent meeting-notes latest` | Same as `/meeting-notes latest` |
 

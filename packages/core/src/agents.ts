@@ -14,7 +14,7 @@ export const AGENT_REGISTRY: AgencyAgentDefinition[] = [
   {
     id: "meeting-notes",
     name: "Meeting Notes → Checklist",
-    description: "Pick a Gemini meeting note from Gmail or use latest; OpenRouter builds a Slack checklist.",
+    description: "Pick a Gemini meeting note from Gmail or use latest; OpenRouter builds a Slack task list and checklist.",
     status: "beta",
     slashCommand: "meeting-notes",
     requiresGoogle: true,

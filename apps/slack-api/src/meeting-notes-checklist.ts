@@ -3,7 +3,10 @@ import { getOpenRouterApiKey, getOpenRouterModel } from "./hub-settings.js";
 
 export interface MeetingChecklistResult {
   meetingTitle: string;
+  /** Follow-ups, decisions, and verification items (no assignee required). */
   checklistItems: string[];
+  /** Action items; include assignee prefix when the note names one (e.g. "Sean Craig: Ship fix"). */
+  taskItems: string[];
 }
 
 const CHECKLIST_SCHEMA = {
@@ -13,10 +16,14 @@ const CHECKLIST_SCHEMA = {
     checklistItems: {
       type: "array",
       items: { type: "string" },
+    },
+    taskItems: {
+      type: "array",
+      items: { type: "string" },
       minItems: 1,
     },
   },
-  required: ["meetingTitle", "checklistItems"],
+  required: ["meetingTitle", "checklistItems", "taskItems"],
   additionalProperties: false,
 } as const;
 
@@ -43,7 +50,7 @@ export async function buildChecklistFromNote(note: GeminiMeetingNote): Promise<M
         {
           role: "system",
           content:
-            "You turn one Gemini meeting-note email into a short Slack checklist. Output JSON only matching the schema. Each checklist item is one actionable task (verb-led, under 120 chars). The checklist must reflect only the provided email (messageId, subject, body). Do not invent facts.",
+            "You turn one Gemini meeting-note email into Slack-ready lists. Output JSON only matching the schema. checklistItems: follow-ups, decisions, and verification steps (verb-led, under 120 chars). taskItems: concrete action items from the note; prefix with assignee name when the note names one (e.g. \"Pat Lee: Send draft by Friday\"). Reflect only the provided email (messageId, subject, body). Do not invent facts.",
         },
         {
           role: "user",
@@ -87,7 +94,12 @@ export async function buildChecklistFromNote(note: GeminiMeetingNote): Promise<M
     throw new Error("OpenRouter returned invalid JSON");
   }
 
-  if (!parsed.meetingTitle || !Array.isArray(parsed.checklistItems) || parsed.checklistItems.length === 0) {
+  if (
+    !parsed.meetingTitle ||
+    !Array.isArray(parsed.checklistItems) ||
+    !Array.isArray(parsed.taskItems) ||
+    parsed.taskItems.length === 0
+  ) {
     throw new Error("OpenRouter checklist shape invalid");
   }
 
@@ -101,12 +113,19 @@ export function formatChecklistSlackMrkdwn(
   const when = note.receivedAt
     ? new Date(note.receivedAt).toLocaleString("en-CA", { timeZone: "America/Edmonton" })
     : "";
-  const lines = checklist.checklistItems.map((item) => `• ${item}`);
-  return [
+  const parts: string[] = [
     `*${checklist.meetingTitle}*`,
-    when ? `_Latest Gemini note (${when} MT)_` : "_Latest Gemini note_",
+    when ? `_Gemini note (${when} MT)_` : "_Gemini note_",
     "",
-    "*Checklist*",
-    ...lines,
-  ].join("\n");
+  ];
+
+  if (checklist.taskItems.length > 0) {
+    parts.push("*Task list*", ...checklist.taskItems.map((item) => `• ${item}`), "");
+  }
+
+  if (checklist.checklistItems.length > 0) {
+    parts.push("*Checklist*", ...checklist.checklistItems.map((item) => `• ${item}`));
+  }
+
+  return parts.join("\n").trimEnd();
 }
