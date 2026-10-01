@@ -18,8 +18,9 @@ import { meetingNotesDriveConfigured } from "./meeting-notes-drive.js";
 import {
   handleSlackUserOAuthCallback,
   handleSlackUserOAuthStart,
-  slackUserOAuthConfigured,
+  slackUserOAuthConfiguredAsync,
 } from "./slack-user-oauth.js";
+import { saveHubSlackOAuthSettings } from "./hub-settings.js";
 import { assertHubAdmin, hubAdminTokenConfigured } from "./hub-admin.js";
 import {
   getHubSettingsPublic,
@@ -132,7 +133,7 @@ api.get("/health", async (_req, res) => {
     hubSettingsAdmin: hubAdminTokenConfigured(),
     meetingNotesDrive: meetingNotesDriveConfigured(),
     pulseBridge: pulseBridgeConfigured(),
-    slackUserOAuth: slackUserOAuthConfigured(),
+    slackUserOAuth: await slackUserOAuthConfiguredAsync(),
   });
 });
 
@@ -144,6 +145,24 @@ api.get("/api/hub/settings", async (_req, res) => {
     res.status(500).json({
       error: e instanceof Error ? e.message : "Failed to load settings",
     });
+  }
+});
+
+api.put("/api/hub/settings/slack-oauth", async (req, res) => {
+  try {
+    assertHubAdmin(req);
+    const body = req.body as { slackClientSecret?: string };
+    const secret = String(body.slackClientSecret ?? "").trim();
+    if (!secret) {
+      res.status(400).json({ error: "slackClientSecret is required" });
+      return;
+    }
+    await saveHubSlackOAuthSettings(secret);
+    res.json({ ok: true, slackUserOAuth: await slackUserOAuthConfiguredAsync() });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Save failed";
+    const status = msg === "Unauthorized" ? 401 : 400;
+    res.status(status).json({ error: msg });
   }
 });
 

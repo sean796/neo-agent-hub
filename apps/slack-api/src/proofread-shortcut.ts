@@ -6,10 +6,7 @@ import {
 } from "./connections.js";
 import { openRouterConfiguredAsync } from "./hub-settings.js";
 import { PROOFREAD_MESSAGE_CALLBACK_ID, proofreadSlackMessage } from "./proofread-message.js";
-import {
-  buildSlackUserConnectUrl,
-  slackUserOAuthConfigured,
-} from "./slack-user-oauth.js";
+import { buildSlackUserConnectUrl, slackUserOAuthConfiguredAsync } from "./slack-user-oauth.js";
 import { updateMessageAsUser } from "./slack-message-update.js";
 
 type SlackMessagePayload = {
@@ -77,10 +74,10 @@ export function registerProofreadShortcut(app: App): void {
     const teamId = shortcut.team?.id ?? shortcut.user.team_id;
     if (!teamId) return;
 
-    if (!slackUserOAuthConfigured()) {
+    if (!(await slackUserOAuthConfiguredAsync())) {
       await respond({
         response_type: "ephemeral",
-        text: "Proofread rewrite is not configured on the server (Slack user OAuth).",
+        text: "Proofread rewrite is not configured. Set SLACK_CLIENT_ID, SLACK_CLIENT_SECRET, and SLACK_USER_OAUTH_REDIRECT_URI on Render.",
       });
       return;
     }

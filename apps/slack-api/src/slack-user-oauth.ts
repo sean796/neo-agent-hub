@@ -3,17 +3,22 @@ import { encryptString } from "./crypto.js";
 import { saveSlackUserAccessToken } from "./connections.js";
 import { buildOAuthState, parseOAuthState } from "./oauth-state.js";
 import { apiPublicOrigin } from "./google-oauth.js";
+import {
+  resolveSlackClientSecret,
+  slackOAuthClientId,
+  slackOAuthRedirectUri,
+  slackUserOAuthConfiguredAsync,
+} from "./slack-oauth-config.js";
 
 const SLACK_USER_SCOPE = "chat:write";
 
 export function slackUserOAuthConfigured(): boolean {
   return Boolean(
-    process.env.SLACK_CLIENT_ID &&
-      process.env.SLACK_CLIENT_SECRET &&
-      process.env.SLACK_USER_OAUTH_REDIRECT_URI &&
-      process.env.TOKEN_ENCRYPTION_KEY,
+    slackOAuthClientId() && slackOAuthRedirectUri() && process.env.TOKEN_ENCRYPTION_KEY,
   );
 }
+
+export { slackUserOAuthConfiguredAsync };
 
 export function buildSlackUserConnectUrl(slackUserId: string, slackTeamId: string): string {
   const origin = apiPublicOrigin();
@@ -25,7 +30,7 @@ export function buildSlackUserConnectUrl(slackUserId: string, slackTeamId: strin
 }
 
 export async function handleSlackUserOAuthStart(req: Request, res: Response): Promise<void> {
-  if (!slackUserOAuthConfigured()) {
+  if (!(await slackUserOAuthConfiguredAsync())) {
     res.status(503).send("Slack user OAuth is not configured on the server.");
     return;
   }
@@ -38,16 +43,16 @@ export async function handleSlackUserOAuthStart(req: Request, res: Response): Pr
 
   const state = buildOAuthState(slackUserId, slackTeamId);
   const params = new URLSearchParams({
-    client_id: process.env.SLACK_CLIENT_ID!,
+    client_id: slackOAuthClientId()!,
     user_scope: SLACK_USER_SCOPE,
-    redirect_uri: process.env.SLACK_USER_OAUTH_REDIRECT_URI!,
+    redirect_uri: slackOAuthRedirectUri()!,
     state,
   });
   res.redirect(`https://slack.com/oauth/v2/authorize?${params.toString()}`);
 }
 
 export async function handleSlackUserOAuthCallback(req: Request, res: Response): Promise<void> {
-  if (!slackUserOAuthConfigured()) {
+  if (!(await slackUserOAuthConfiguredAsync())) {
     res.status(503).send("Slack user OAuth is not configured on the server.");
     return;
   }
@@ -72,14 +77,15 @@ export async function handleSlackUserOAuthCallback(req: Request, res: Response):
     return;
   }
 
+  const clientSecret = await resolveSlackClientSecret();
   const tokenRes = await fetch("https://slack.com/api/oauth.v2.access", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
-      client_id: process.env.SLACK_CLIENT_ID!,
-      client_secret: process.env.SLACK_CLIENT_SECRET!,
+      client_id: slackOAuthClientId()!,
+      client_secret: clientSecret,
       code,
-      redirect_uri: process.env.SLACK_USER_OAUTH_REDIRECT_URI!,
+      redirect_uri: slackOAuthRedirectUri()!,
     }),
   });
   const tokenJson = (await tokenRes.json()) as {
