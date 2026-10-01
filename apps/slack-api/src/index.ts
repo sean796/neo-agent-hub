@@ -3,6 +3,12 @@ import express from "express";
 import { App, ExpressReceiver } from "@slack/bolt";
 import { AGENT_REGISTRY } from "@neo-agent-hub/core";
 import { initDb, listAgentsFromDb } from "./db.js";
+import {
+  googleOAuthConfigured,
+  handleGoogleOAuthCallback,
+  handleGoogleOAuthStart,
+} from "./google-oauth.js";
+import { runMeetingNotesCommand } from "./meeting-notes-command.js";
 
 const port = Number(process.env.PORT) || 10000;
 
@@ -40,18 +46,19 @@ if (receiver) {
       });
       return;
     }
+    if (sub === "meeting-notes") {
+      await runMeetingNotesCommand(command.user_id, command.team_id, respond);
+      return;
+    }
     await respond({
       response_type: "ephemeral",
-      text: `Agent \`${sub}\` is not wired yet. Connect Google and run meeting-notes when OAuth is configured.`,
+      text: `Unknown agent \`${sub}\`. Try \`meeting-notes\`.`,
     });
   });
 
-  app.command("/meeting-notes", async ({ ack, respond }) => {
+  app.command("/meeting-notes", async ({ command, ack, respond }) => {
     await ack();
-    await respond({
-      response_type: "ephemeral",
-      text: "Meeting Notes agent shell is live. Google OAuth and Gmail fetch are the next implementation step.",
-    });
+    await runMeetingNotesCommand(command.user_id, command.team_id, respond);
   });
 }
 
@@ -75,6 +82,7 @@ api.get("/health", async (_req, res) => {
     service: "neo-agent-hub-api",
     db,
     slack: Boolean(receiver),
+    googleOAuth: googleOAuthConfigured(),
   });
 });
 
@@ -100,12 +108,12 @@ api.get("/api/agents", async (_req, res) => {
   });
 });
 
-api.get("/oauth/google/start", (_req, res) => {
-  res.status(501).json({ error: "Google OAuth not configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET." });
+api.get("/oauth/google/start", (req, res) => {
+  void handleGoogleOAuthStart(req, res);
 });
 
-api.get("/oauth/google/callback", (_req, res) => {
-  res.status(501).send("Google OAuth callback not configured.");
+api.get("/oauth/google/callback", (req, res) => {
+  void handleGoogleOAuthCallback(req, res);
 });
 
 api.listen(port, () => {
