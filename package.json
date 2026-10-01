@@ -11,7 +11,8 @@
     "build:web": "npm run build -w @neo-agent-hub/hub-web",
     "start:api": "npm run start -w @neo-agent-hub/slack-api",
     "dev:api": "npm run dev -w @neo-agent-hub/slack-api",
-    "dev:web": "npm run dev -w @neo-agent-hub/hub-web"
+    "dev:web": "npm run dev -w @neo-agent-hub/hub-web",
+    "validate:manifest": "node scripts/validate-slack-manifest.cjs"
   },
   "engines": {
     "node": ">=20"

@@ -5,7 +5,7 @@
   },
   "display_information": {
     "name": "Neo Agent Hub",
-    "description": "Agency agent hub: run meeting-notes and future agents from Slack.",
+    "description": "Neo Digital agents in Slack: meeting notes, write, SEO tools.",
     "background_color": "#09090b"
   },
   "features": {
@@ -20,63 +20,63 @@
     },
     "shortcuts": [
       {
-        "name": "Write: correct",
+        "name": "Write correct",
         "type": "message",
         "callback_id": "proofread_message",
-        "description": "Fix grammar and clarity in place (/write correct)"
+        "description": "Fix grammar and clarity in your message"
       },
       {
-        "name": "Write: polish",
+        "name": "Write polish",
         "type": "message",
         "callback_id": "polish_message",
-        "description": "Polish tone in place (/write polish)"
+        "description": "Polish tone in your message"
       },
       {
-        "name": "Write: shorten",
+        "name": "Write shorten",
         "type": "message",
         "callback_id": "shorten_message",
-        "description": "Tighter wording in place (/write shorten)"
+        "description": "Shorten your message"
       },
       {
-        "name": "Write: adjust",
+        "name": "Write adjust",
         "type": "message",
         "callback_id": "adjust_message",
-        "description": "Pick a style and rewrite in place (/write)"
+        "description": "Pick a style and rewrite your message"
       }
     ],
     "slash_commands": [
       {
         "command": "/agent",
         "description": "List or run Neo Digital agents",
-        "usage_hint": "[agent-id]",
+        "usage_hint": "agent id",
         "should_escape": false,
         "url": "https://neo-agent-hub-api.onrender.com/slack/commands"
       },
       {
         "command": "/meeting-notes",
         "description": "Meeting notes to task list and checklist",
-        "usage_hint": "[latest]",
+        "usage_hint": "latest",
         "should_escape": false,
         "url": "https://neo-agent-hub-api.onrender.com/slack/commands"
       },
       {
         "command": "/seo-pulse",
         "description": "GSC digest and one recommended action",
-        "usage_hint": "[site-slug]",
+        "usage_hint": "site slug",
         "should_escape": false,
         "url": "https://neo-agent-hub-api.onrender.com/slack/commands"
       },
       {
         "command": "/intent-check",
-        "description": "Check draft vs search intent (beta)",
-        "usage_hint": "query and outline or URL",
+        "description": "Check draft vs search intent beta",
+        "usage_hint": "query or URL",
         "should_escape": false,
         "url": "https://neo-agent-hub-api.onrender.com/slack/commands"
       },
       {
         "command": "/write",
-        "description": "AI rewrite a draft (correct, polish, shorten, and more)",
-        "usage_hint": "[style] draft text, or leave empty for editor",
+        "description": "AI rewrite a draft for the message box",
+        "usage_hint": "style then draft or empty",
         "should_escape": false,
         "url": "https://neo-agent-hub-api.onrender.com/slack/commands"
       }
