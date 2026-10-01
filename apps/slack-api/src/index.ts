@@ -9,6 +9,7 @@ import {
   handleGoogleOAuthStart,
 } from "./google-oauth.js";
 import { runMeetingNotesCommand } from "./meeting-notes-command.js";
+import { registerMeetingNotesInteractions } from "./meeting-notes-interactions.js";
 import { assertHubAdmin, hubAdminTokenConfigured } from "./hub-admin.js";
 import {
   getHubSettingsPublic,
@@ -53,7 +54,8 @@ if (receiver) {
       return;
     }
     if (sub === "meeting-notes") {
-      void runMeetingNotesCommand(command.user_id, command.team_id, respond);
+      const rest = command.text.trim().split(/\s+/).slice(1).join(" ");
+      void runMeetingNotesCommand(command.user_id, command.team_id, respond, rest);
       return;
     }
     await respond({
@@ -64,8 +66,10 @@ if (receiver) {
 
   app.command("/meeting-notes", async ({ command, ack, respond }) => {
     await ack();
-    void runMeetingNotesCommand(command.user_id, command.team_id, respond);
+    void runMeetingNotesCommand(command.user_id, command.team_id, respond, command.text);
   });
+
+  registerMeetingNotesInteractions(app);
 }
 
 const api = express();

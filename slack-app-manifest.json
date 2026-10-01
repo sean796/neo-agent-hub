@@ -29,6 +29,7 @@
       {
         "command": "/meeting-notes",
         "description": "Run Meeting Notes to Checklist agent",
+        "usage_hint": "[latest]",
         "should_escape": false,
         "url": "https://neo-agent-hub-api.onrender.com/slack/commands"
       }

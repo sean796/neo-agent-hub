@@ -54,6 +54,15 @@ Create one Slack app **Neo Agent Hub** and set:
 
 **OAuth scopes (bot):** `commands`, `chat:write`, `im:write`, `users:read`
 
+### Meeting notes in Slack
+
+| Command | What it does |
+|---------|----------------|
+| `/meeting-notes` | Picker: choose a Gemini note (subject preview), then **Create checklist** |
+| `/meeting-notes latest` | Checklist from the newest Gemini note only |
+| `/agent meeting-notes` | Same as `/meeting-notes` |
+| `/agent meeting-notes latest` | Same as `/meeting-notes latest` |
+
 ## Environment variables (web service)
 
 - `DATABASE_URL` — Render **Internal Database URL** for `neo-agent-hub-db`

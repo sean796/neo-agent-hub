@@ -43,11 +43,12 @@ export async function buildChecklistFromNote(note: GeminiMeetingNote): Promise<M
         {
           role: "system",
           content:
-            "You turn Gemini meeting-note emails into a short Slack checklist. Output JSON only matching the schema. Each checklist item is one actionable task (verb-led, under 120 chars). Use the email subject and body; do not invent facts.",
+            "You turn one Gemini meeting-note email into a short Slack checklist. Output JSON only matching the schema. Each checklist item is one actionable task (verb-led, under 120 chars). The checklist must reflect only the provided email (messageId, subject, body). Do not invent facts.",
         },
         {
           role: "user",
           content: JSON.stringify({
+            messageId: note.messageId,
             subject: note.subject,
             receivedAt: note.receivedAt,
             body: note.bodyText.slice(0, 24_000),
