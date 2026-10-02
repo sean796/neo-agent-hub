@@ -14,6 +14,14 @@ TypeScript agent platform for Neo Digital: Slack invokes agents; this hub lists 
 | Hub UI | https://neo-agent-hub-web.onrender.com |
 | Postgres | `neo-agent-hub-db` (Render dashboard) |
 
+**Google OAuth branding (NEO Pulse / Render)**
+
+| Field | URL |
+|-------|-----|
+| Application home page | `https://neo-agent-hub-web.onrender.com/` |
+| Privacy policy | `https://neo-agent-hub-web.onrender.com/privacy-policy` |
+| Terms of service | `https://neo-agent-hub-web.onrender.com/terms-of-service` |
+
 ## Stack
 
 - **apps/slack-api** — Express + Slack Bolt (Render web service)
